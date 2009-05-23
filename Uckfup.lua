@@ -29,11 +29,11 @@ local function OnUpdate(self, elapsed)
 		self.announceElapsed = 0
 		
 		local time = GetTime()
-		for spellName, timeout in pairs(self.sendTimeouts) do
+		for spellName, timeout in pairs(Uckfup.sendTimeouts) do
 			if( timeout <= time ) then
 				Uckfup:PrintFail(spellName)
 
-				self.sendTimeouts[spellName] = nil
+				Uckfup.sendTimeouts[spellName] = nil
 				self.announcements = self.announcements - 1
 			end
 		end
