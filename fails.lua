@@ -22,7 +22,7 @@
 	}
 ]]
 
-local UckfupSpells = {
+UckfupSpells = {
 	-- Unstable Energy / SPELL_PERIODIC_DAMAGE,0xF130008192004C98,"Sun Beam",0xa48,0x050000000024ECA2,"Segomos",0x514,62865,"Unstable Energy",0x8,5801,0,8,1699,0,0,nil,nil,nil
 	[GetSpellInfo(62451)] = {type = "SPELL_PERIODIC_DAMAGE", hits = 2},
 	-- Saronite Vapors / 5/21 19:26:33.135 SPELL_ENERGIZE,0x0000000000000000,nil,0x80000000,0x05000000009E0446,"Tsurara",0x514,63337,"Saronite Vapors",0x20,400,0

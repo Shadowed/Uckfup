@@ -121,17 +121,17 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 	end
 	
 	-- Aura applied
-	if( event == "SPELL_AURA_APPLIED" and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) == COMBATLOG_OBJECT_TYPE_PLAYER ) then
+	if( eventType == "SPELL_AURA_APPLIED" and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) == COMBATLOG_OBJECT_TYPE_PLAYER ) then
 		local spellID, spellName, spellSchool, auraType = ...
-		local spellData = self.spells[spellID or spellName]
-		if( spellData and spellData.type == eventType and spellData.aura == auraType ) then
+		local spellData = self.spells[spellName]
+		if( spellData and spellData.type == eventType and spellData.auraType == auraType ) then
 			self:TriggerFail(id, spellData.throttle, destGUID, destName, spellName)
 		end
 		
 	-- Periorid ticks
-	elseif( event == "SPELL_PERIODIC_DAMAGE" and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) == COMBATLOG_OBJECT_TYPE_PLAYER ) then
+	elseif( eventType == "SPELL_PERIODIC_DAMAGE" and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) == COMBATLOG_OBJECT_TYPE_PLAYER ) then
 		local spellID, spellName, spellSchool, auraType = ...
-		local spellData = self.spells[spellID or spellName]
+		local spellData = self.spells[spellName]
 		if( spellData and spellData.type == eventType ) then
 			local id = spellName .. destGUID
 			local time = GetTime()
@@ -154,7 +154,7 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 	-- Damage >:( + Energizer Bunny :)
 	elseif( eventType == "SPELL_DAMAGE" or eventType == "SPELL_ENERGIZE" ) then
 		local spellID, spellName, spellSchool, amount = ...
-		local spellData = self.spells[spellID or spellName]
+		local spellData = self.spells[spellName]
 		if( spellData and spellData.type == eventType ) then
 			local byPlayer = bit.band(sourceFlags, COMBATLOG_OBJECT_TYPE_PLAYER) == COMBATLOG_OBJECT_TYPE_PLAYER
 			
@@ -193,7 +193,7 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 	-- In both SPELL_INTERRUPT and SPELL_DISPEL, the extra* args are the spell that was affected, the first ones are the spell used
 	elseif( eventType == "SPELL_INTERRUPT" and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) == COMBATLOG_OBJECT_TYPE_PLAYER ) then
 		local spellID, spellName, spellSchool, extraSpellID, extraSpellName, extraSpellSchool = ...
-		local spellData = self.spells[spellID or spellName]
+		local spellData = self.spells[spellName]
 		if( spellData and spellData.type == eventType ) then
 			self:TriggerFail(id, spellData.throttle, destGUID, destName, spellName)
 		end
@@ -201,7 +201,7 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 	-- Managed to dispel or steal a buff
 	elseif( eventType == "SPELL_DISPEL" and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) == COMBATLOG_OBJECT_TYPE_PLAYER ) then
 		local spellID, spellName, spellSchool, extraSpellID, extraSpellName, extraSpellSchool = ...
-		local spellData = self.spells[spellID or spellName]
+		local spellData = self.spells[spellName]
 		if( spellData and spellData.type == eventType ) then
 			self:TriggerFail(id, spellData.throttle, destGUID, destName, extraSpellName)
 		end
