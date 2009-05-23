@@ -244,22 +244,22 @@ SlashCmdList["UCKFUP"] = function(msg)
 	local cmd, arg = string.split(" ", msg or "", 2)
 	cmd = string.lower(cmd or "")
 	
-	if( cmd == "report" ) then
-		if( tonumber(cmd) ) then
-			UckfupDB.report = cmd
+	if( cmd == "report" and arg ) then
+		if( tonumber(arg) ) then
+			UckfupDB.report = arg
 			UckfupDB.reportType = "chat"
-			self:Print(string.format(L["Now reporting fails to chat frame #%s."], cmd))
-		elseif( cmd == "raid" or cmd == "party" or cmd == "guid" or cmd == "officer" or cmd == "say" ) then
-			UckfupDB.report = cmd
+			self:Print(string.format(L["Now reporting fails to chat frame #%s."], arg))
+		elseif( arg == "raid" or arg == "party" or arg == "guid" or arg == "officer" or arg == "say" ) then
+			UckfupDB.report = arg
 			UckfupDB.reportType = "main"
-			self:Print(string.format(L["Now reporting fails to %s chat."], cmd))
+			self:Print(string.format(L["Now reporting fails to %s chat."], arg))
 		else
-			UckfupDB.report = cmd
+			UckfupDB.report = arg
 			UckfupDB.reportType = "channel"
-			self:Print(string.format(L["Now reporting fails to channel %s."], cmd))
+			self:Print(string.format(L["Now reporting fails to channel %s."], arg))
 		end
 	elseif( cmd == "toggle" ) then
-		UckfupDB.enabled = not UckfupDB.enanled
+		UckfupDB.enabled = not UckfupDB.enabled
 		self:ZONE_CHANGED_NEW_AREA()
 		
 		if( UckfupDB.enabled ) then
