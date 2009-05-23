@@ -1,4 +1,6 @@
 UckfupLocals = {
+	["%s failed at %s"] = "%s failed at %s",
+
 	-- Slash commands
 	["Now reporting fails to %s chat."] = "Now reporting fails to %s chat.",
 	["Now reporting fails to channel %s"] = "Now reporting fails to channel %s",

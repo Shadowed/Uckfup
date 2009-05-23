@@ -1,22 +1,30 @@
 --[[
 	When possible, use GetSpellInfo(#) instead of straight spell name so it's localization independant
+	
+	Note that, throttle is accepted for all types, but mob/secondMob/hits/threshold are only supported for SPELL_DAMAGE/SPELLL_ENERGIZE
+	hits is supported for SPELL_PERIODIC_DAMAGE as well, when you don't pass a throttle it'll default to 30 seconds so it can collect
+	garbage data every 10 minutes.
+	
 	Format:
 	[spellName] = {
 		-- Combat event that this is triggered off of
-		type = "SPELL_ENERGIZE/SPELL_DAMAGE/SPELL_AURA_APPLIED/SPELL_INTERRUPT"
+		type = "SPELL_ENERGIZE/SPELL_DAMAGE/SPELL_AURA_APPLIED/SPELL_INTERRUPT/SPELL_DISPEL"
 		-- Throttle (in seconds) only show this fail every X seconds
 		throttle = 5,
-		-- Mob ID/Mob Name, only show this fail if the source is from the passed mobID or mob name, in this case 32865 is Thorim http://www.wowhead.com/?npc=32865
-		mob = 32865 *OR* mob = "Thorim",
+		-- Mob ID/Mob Name, only show this fail if the source is from the passed mobID, in this case 32865 is Thorim http://www.wowhead.com/?npc=32865
+		mob = 32865,
 		-- Same as above, just lets you set another mob for it to fail off of
-		secondMob = 32865 *OR* mob = "Thorim",
-		-- How many times this spell has to hit before it counts as a fail, 3 means once it hits 3 other people, it's a fail.
+		secondMob = 32865,
+		-- How many times this spell has to hit before it counts as a fail, 3 means once it hits 3 times total (Including the player + raid), it's a fail.
 		hits = 3,
 		-- How much damage/energize/etc needs to have happened before it counts as a fail
 		threshold = 1000,
 	}
 ]]
+
 local UckfupSpells = {
+	-- Unstable Energy / SPELL_PERIODIC_DAMAGE,0xF130008192004C98,"Sun Beam",0xa48,0x050000000024ECA2,"Segomos",0x514,62865,"Unstable Energy",0x8,5801,0,8,1699,0,0,nil,nil,nil
+	[GetSpellInfo(62451)] = {type = "SPELL_PERIODIC_DAMAGE", hits = 2},
 	-- Saronite Vapors / 5/21 19:26:33.135 SPELL_ENERGIZE,0x0000000000000000,nil,0x80000000,0x05000000009E0446,"Tsurara",0x514,63337,"Saronite Vapors",0x20,400,0
 	[GetSpellInfo(63337)] = {type = "SPELL_ENERGIZE", threshold = 12800},
 	-- Light Bomb / 5/16 12:27:24.579 SPELL_DAMAGE,0x05000000007A7977,"Alithia",0x10514,0x05000000007A7977,"Alithia",0x10514,63023,"Light Bomb",0x42,2250,0,66,0,0,0,nil,nil,nil
@@ -41,11 +49,12 @@ local UckfupSpells = {
 	[GetSpellInfo(62465)] = {type = "SPELL_DAMAGE", throttle = 5},
 	-- Overload / 3/20 19:22:43.389  SPELL_DAMAGE,0xF130008059000703,"Stormcaller Brundir",0x8000a48,0x01000000007C5537,"Vanen",0x512,61878,"Overload",0x8,17460,0,8,2000,0,0,nil,nil,nil
 	[GetSpellInfo(32857)] = {type = "SPELL_DAMAGE", mob = 32857},
-	-- Flame Jets / 3/16 19:50:05.275  SPELL_INTERRUPT,0x0000000000000000,nil,0x80000000,0x01000000007CED8E,"Mute",0x514,62681,"Flame Jets",0x4,49238,"Lightning Bolt",8	[GetSpellInfo(62681)] = {type = "SPELL_INTERRUPT"},
+	-- Flame Jets / 3/16 19:50:05.275  SPELL_INTERRUPT,0x0000000000000000,nil,0x80000000,0x01000000007CED8E,"Mute",0x514,62681,"Flame Jets",0x4,49238,"Lightning Bolt",8	
+	[GetSpellInfo(62681)] = {type = "SPELL_INTERRUPT"},
 	-- Ground Tremor / 5/21 17:43:09.505 SPELL_INTERRUPT,0xF1300080920040F6,"Elder Stonebark",0x20a48,0x05000000000501EB,"Monthor",0x514,62932,"Ground Tremor",0x1,48465,"S
 	[GetSpellInfo(62932)] = {type = "SPELL_INTERRUPT"},
 	-- Flash Freeze / 2/26 20:15:03.498  SPELL_AURA_APPLIED,0x0000000000000000,nil,0x80000000,0x01000000007C66FF,"Museedad",0x4000514,61969,"Flash Freeze",0x10,DEBUFF
-	[GetSpellInfo(91969)] = {type = "SPELL_AURA_APPLIED", type = "DEBUFF"},
+	[GetSpellInfo(61969)] = {type = "SPELL_AURA_APPLIED", auraType = "DEBUFF"},
 	-- Rocket Strike / 3/13 20:56:28.111  SPELL_DAMAGE,0xF1300084FF001E10,"Rocket Strike",0xa48,0x01000000007C088D,"Veev",0x511,63041,"Rocket Strike",0x4,676800,657890,4,200000,0,0,nil,nil,nil
 	[GetSpellInfo(63041)] = {type = "SPELL_DAMAGE"},
 	-- P3W2 Laser Barrage / 3/13 21:05:11.205  SPELL_DAMAGE,0xF1500083730020DC,"VX-001",0x10a48,0x01000000007F4785,"Lawlpurge",0x514,63293,"P3Wx2 Laser Barrage",0x40,19400,1821,64,0,0,0,nil,nil,nil
