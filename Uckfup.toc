@@ -1,0 +1,10 @@
+## Interface: 30100
+## Title: Uckfup
+## Notes: Failure reporting mod that isn't horribly evil
+## Author: Mayen
+## SavedVariables: UckfupDB
+
+localization.enUS.lua
+
+fails.lua
+Uckfup.lua
