@@ -3,7 +3,7 @@ UckfupLocals = {
 
 	-- Slash commands
 	["Now reporting fails to %s chat."] = "Now reporting fails to %s chat.",
-	["Now reporting fails to channel %s"] = "Now reporting fails to channel %s",
+	["Now reporting fails to chat frame #%s."] = "Now reporting fails to chat frame #%s.",
 	["Now reporting fails to channel %s."] = "Now reporting fails to channel %s.",
 	["Uckfup is now enabled, you will need to type /fail toggle to disable it."] = "Uckfup is now enabled, you will need to type /fail toggle to disable it.",
 	["Uckfup is now disabled, you will need to type /fail toggle to enable it."] = "Uckfup is now disabled, you will need to type /fail toggle to enable it.",

@@ -67,7 +67,7 @@ end
 
 local chatFrames = {}
 function Uckfup:TriggerFail(id, throttle, destGUID, destName, spellName)
-	if( throttle and self.reported[id] > GetTime() ) then
+	if( throttle and self.reported[id] and self.reported[id] > GetTime() ) then
 		return
 	elseif( throttle ) then
 		self.reported[id] = GetTime() + throttle
@@ -183,7 +183,7 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 					
 					-- Either no rqeuired number of hits before whining, or we exceeded it.
 					if( not spellData.hits or self.ticks[id] >= spellData.hits ) then
-						self:TriggerFail(id, spellData.throttle, name, guid, spellName)
+						self:TriggerFail(id, spellData.throttle, guid, name, spellName)
 					end
 				end
 			end
@@ -249,7 +249,7 @@ SlashCmdList["UCKFUP"] = function(msg)
 			UckfupDB.report = arg
 			UckfupDB.reportType = "chat"
 			self:Print(string.format(L["Now reporting fails to chat frame #%s."], arg))
-		elseif( arg == "raid" or arg == "party" or arg == "guid" or arg == "officer" or arg == "say" ) then
+		elseif( arg == "raid" or arg == "party" or arg == "guild" or arg == "officer" or arg == "say" ) then
 			UckfupDB.report = arg
 			UckfupDB.reportType = "main"
 			self:Print(string.format(L["Now reporting fails to %s chat."], arg))
