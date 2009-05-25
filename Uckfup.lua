@@ -87,13 +87,35 @@ function Uckfup:TriggerFail(id, throttle, destGUID, destName, spellName)
 	self.frame:Show()
 end
 
+local tempFail = {}
 function Uckfup:PrintFail(spellName)
 	-- Make sure we have something to announce of course.
 	if( not self.sendQueue[spellName] or #(self.sendQueue[spellName]) == 0 ) then
 		return
 	end
 	
-	local msg = string.format(L["%s failed at %s"], table.concat(self.sendQueue[spellName], ", "), spellName)
+	-- Load all of the fails into a single table so we can show how many times they failed, if they failed multiple times before we printed
+	for k in pairs(tempFail) do tempFail[k] = nil end
+	for _, name in pairs(self.sendQueue[spellName]) do
+		tempFail[name] = (tempFail[name] or 0) + 1
+	end
+	
+	local nameList
+	for name, count in pairs(tempFail) do
+		if( nameList ) then
+			if( count > 1 ) then
+				nameList = string.format("%s, %s (%d)", nameList, name, count)
+			else
+				nameList = string.format("%s, %s", nameList, name)
+			end
+		elseif( count > 1 ) then
+			nameList = string.format("%s (%d)", name, count)
+		else
+			nameList = name
+		end
+	end
+	
+	local msg = string.format(L["%s failed at %s"], nameList or "????", spellName)
 	
 	if( UckfupDB.reportType == "main" ) then
 		SendChatMessage(msg, UckfupDB.report)
@@ -158,11 +180,16 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 		if( spellData and spellData.type == eventType ) then
 			local byPlayer = bit.band(sourceFlags, COMBATLOG_OBJECT_TYPE_PLAYER) == COMBATLOG_OBJECT_TYPE_PLAYER
 			
+			-- The person who did the event isn't a player, and the target of the event isn't a player either.
+			if( not byPlayer and not bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) == COMBATLOG_OBJECT_TYPE_PLAYER ) then
+				return
+			end
+			
 			-- If it's done by a player, it obviously wasn't done by a mob so it's fine, if we have no mob data we don't care where it came from, if we DO have mob data
 			-- then will filter and make sure it's good
 			if( byPlayer or not spellData.mob or ( ( spellData.mob and spellData.mob == self:GetMobID(sourceGUID ) ) or ( spellData.secondMob and spellData.secondMob == self:GetMobID(sourceGUID) ) ) ) then
 				-- Figure out what variables to use
-				local name, guid = sourceName, sourceGUID
+				local name, guid, flag = sourceName, sourceGUID
 				if( not byPlayer ) then
 					name, guid = destName, destGUID
 				end
