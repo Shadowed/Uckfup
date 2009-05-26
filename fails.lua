@@ -58,10 +58,8 @@ UckfupSpells = {
 	[GetSpellInfo(63023)] = {type = "SPELL_DAMAGE", throttle = 5},
 
 	-- Ulduar: Hodir
-	-- Flash Freeze / 2/26 20:15:03.498  SPELL_AURA_APPLIED,0x0000000000000000,nil,0x80000000,0x01000000007C66FF,"Museedad",0x4000514,61969,"Flash Freeze",0x10,DEBUFF
-	[GetSpellInfo(61969)] = {type = "SPELL_AURA_APPLIED", auraType = "DEBUFF"},
 	-- Ice Shards / 5/21 17:21:08.473  SPELL_DAMAGE,0xF130008191009ADF,"Icicle",0xa48,0x0500000002A13CA4,"Taec",0x512,62457,"Ice Shards",0x10,10864,0,16,2800,0,0,nil,nil,nil
-	[GetSpellInfo(62457)] = {type = "SPELL_DAMAGE"},
+	[GetSpellInfo(62457)] = {type = "SPELL_DAMAGE", throttle = 5},
 
 	-- Ulduar: Thorim
 	-- Lightning Charge / 4/16 18:20:24.295  SPELL_DAMAGE,0xF130008061018374,"Thorim",0x8010a48,0x0500000001E8AF39,"Thefeint",0x514,62466,"Lightning Charge",0x8,8977,0,8,3966,0,0,nil,nil,nil
