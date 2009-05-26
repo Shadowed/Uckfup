@@ -50,6 +50,7 @@ function Uckfup:ADDON_LOADED(event, addon)
 	UckfupDB = UckfupDB or {enabled = true, report = "RAID", reportType = "main"}
 
 	self.spells = UckfupSpells
+	self.auras = UckfupAuras
 	self.lastEvents = {}
 	self.reported = {}
 	self.ticks = {}
@@ -135,23 +136,32 @@ function Uckfup:PrintFail(spellName)
 	end
 end
 
+-- Check for aura fails
+function Uckfup:UNIT_AURA(event, unit)
+	if( not UnitIsPlayer(unit) ) then
+		return
+	end
+	
+	for spellName, spellData in pairs(self.auras) do
+		local name, _, _, count = UnitDebuff(unit, spellName)
+		if( name and ( not spellData.stacks or ( count and count >= spellData.stacks ) ) ) then
+			local guid, name = UnitGUID(unit), UnitName(unit)
+			self:TriggerFail(guid .. spellName, spellData.throttle, guid, name, spellName)
+			break
+		end
+	end
+end
+
+-- Check for combatlog fails
 local COMBATLOG_OBJECT_TYPE_PLAYER = COMBATLOG_OBJECT_TYPE_PLAYER
-local eventRegistered = {["SPELL_DAMAGE"] = true, ["SPELL_INTERRUPT"] = true, ["SPELL_ENERGIZE"] = true, ["SPELL_DISPEL"] = true, ["SPELL_AURA_APPLIED"] = true, ["SPELL_PERIODIC_DAMAGE"] = true}
+local eventRegistered = {["SPELL_DAMAGE"] = true, ["SPELL_INTERRUPT"] = true, ["SPELL_ENERGIZE"] = true, ["SPELL_DISPEL"] = true, ["SPELL_PERIODIC_DAMAGE"] = true}
 function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceGUID, sourceName, sourceFlags, destGUID, destName, destFlags, ...)
 	if( not eventRegistered[eventType] ) then
 		return
 	end
 	
-	-- Aura applied
-	if( eventType == "SPELL_AURA_APPLIED" and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) == COMBATLOG_OBJECT_TYPE_PLAYER ) then
-		local spellID, spellName, spellSchool, auraType = ...
-		local spellData = self.spells[spellName]
-		if( spellData and spellData.type == eventType and spellData.auraType == auraType ) then
-			self:TriggerFail(id, spellData.throttle, destGUID, destName, spellName)
-		end
-		
-	-- Periorid ticks
-	elseif( eventType == "SPELL_PERIODIC_DAMAGE" and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) == COMBATLOG_OBJECT_TYPE_PLAYER ) then
+	-- Periodic ticks
+	if( eventType == "SPELL_PERIODIC_DAMAGE" and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) == COMBATLOG_OBJECT_TYPE_PLAYER ) then
 		local spellID, spellName, spellSchool, auraType = ...
 		local spellData = self.spells[spellName]
 		if( spellData and spellData.type == eventType ) then
@@ -176,6 +186,7 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 	-- Damage >:( + Energizer Bunny :)
 	elseif( eventType == "SPELL_DAMAGE" or eventType == "SPELL_ENERGIZE" ) then
 		local spellID, spellName, spellSchool, amount = ...
+		
 		local spellData = self.spells[spellName]
 		if( spellData and spellData.type == eventType ) then
 			local byPlayer = bit.band(sourceFlags, COMBATLOG_OBJECT_TYPE_PLAYER) == COMBATLOG_OBJECT_TYPE_PLAYER
@@ -201,6 +212,12 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 				if( self.lastEvents[id] and self.lastEvents[id] <= time ) then
 					self.lastEvents[id] = nil
 					self.ticks[id] = nil
+				end
+				
+				-- If it's a damaging event, add up the misc thing that changes our total number
+				if( eventType == "SPELL_DAMAGE" ) then
+					local overkill, _, resisted, _, blocked, absorbed = select(5, ...)
+					amount = amount + (overkill or 0) + (resisted or 0) + (blocked or 0) + (absorbed or 0)
 				end
 				
 				-- Either no threshold on damage/regen, or we exceeded the amount
@@ -244,9 +261,11 @@ function Uckfup:ZONE_CHANGED_NEW_AREA()
 	if( not UckfupDB.enabled or select(2, IsInInstance()) ~= "raid" ) then
 		self:ResetData()
 		self.frame:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+		self.frame:UnregisterEvent("UNIT_AURA")
 		self.frame:Hide()
 	else
 		self.frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+		self.frame:RegisterEvent("UNIT_AURA")
 	end
 end
 

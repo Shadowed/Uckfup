@@ -22,6 +22,14 @@
 	}
 ]]
 
+UckfupAuras = {
+	-- Ulduar: Hodir
+	-- Three or more stacks of Biting Cold
+	[GetSpellInfo(62039)] = {stacks = 3, throttle = 10},
+	-- Flash Freeze
+	[GetSpellInfo(61969)] = {throttle = 10},
+}
+
 UckfupSpells = {
 	-- Ulduar: Razorscale
 	-- Devouring Flame / 4/28 19:52:13.198  SPELL_DAMAGE,0x0000000000000000,nil,0x80000000,0x05000000027ED384,"Shinen",0x514,64733,"Devouring Flame",0x4,9471,0,4,1002,0,0,nil,nil,nil
@@ -94,6 +102,8 @@ UckfupSpells = {
 	-- Ulduar: Yogg-Saron
 	-- Death Ray / 4/17 19:50:50.740  SPELL_DAMAGE,0x0000000000000000,nil,0x80000000,0x05000000027ECAFC,"Turyia",0x514,63884,"Death Ray",0x8,14400,0,8,2000,0,0,nil,nil,nil
 	[GetSpellInfo(63884)] = {type = "SPELL_DAMAGE", throttle = 5},
+	-- Brain Link / 5/25 18:44:05.130 SPELL_DAMAGE,0x0500000002A13CA4,"Taec",0x4000514,0x0500000000039C90,"Nokani",0x2000514,63803,"Brain Link",0x20,1920,0,32,600,0,0,nil,nil,ni
+	[GetSpellInfo(63803)] = {type = "SPELL_DAMAGE", threshold = 1800, throttle = 10},
 
 	-- Obsidian Sanctum: Sartharion
 	-- Shadow Fissure / 1/26 17:21:58.706 SPELL_DAMAGE,0xF130003F01003E54,"Shadow Fissure",0xa48,0xF130005E8F003E3D,"Army of the Dead Ghoul",0x2114,27812,"Void Blast",0x20,135642,130121,32,0,0,0,nil,nil,nil
