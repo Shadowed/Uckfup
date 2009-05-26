@@ -22,6 +22,14 @@
 	}
 ]]
 
+--[[
+[49:07] <+Shadowed> er wait
+[49:07] <Gwaihir> SPELL_AURA_APPLIED_DOSE,0xF13000809400BD3B,"Snaplasher",0xa48,0xF13000809400BD3B,"Snaplasher",0xa48,64190,"Hardened Bark",0x1,BUFF,3
+[49:12] <+Shadowed> does Light Bomb damage the player themselves?
+[49:14] * Join: jvar (~jvarnum@c-98-219-117-194.hsd1.fl.comcast.net)
+[49:15] <Gwaihir> SPELL_AURA_APPLIED_DOSE,0xF13000809400BD3B,"Snaplasher",0xa48,0xF13000809400BD3B,"Snaplasher",0xa48,64190,"Hardened Bark",0x1,BUFF,4
+]]
+
 UckfupAuras = {
 	-- Ulduar: Hodir
 	-- Three or more stacks of Biting Cold
@@ -41,9 +49,9 @@ UckfupSpells = {
 
 	-- Ulduar: XT-002 Deconstructor
 	-- Light Bomb / 5/16 12:27:24.579 SPELL_DAMAGE,0x05000000007A7977,"Alithia",0x10514,0x05000000007A7977,"Alithia",0x10514,63023,"Light Bomb",0x42,2250,0,66,0,0,0,nil,nil,nil
-	[GetSpellInfo(63023)] = {type = "SPELL_DAMAGE", hits = 3, throttle = 5},
+	[GetSpellInfo(63023)] = {type = "SPELL_DAMAGE", hits = 3, hitThrottle = 0.50, hitExpires = 5, throttle = 5},
 	-- Gravity Bomb
-	[GetSpellInfo(63024)] = {type = "SPELL_DAMAGE", hits = 2, throttle = 5},
+	[GetSpellInfo(63024)] = {type = "SPELL_DAMAGE", hits = 2, hitExpires = 1, throttle = 5},
 
 	-- Ulduar: Iron Council
 	-- Overload / 3/20 19:22:43.389  SPELL_DAMAGE,0xF130008059000703,"Stormcaller Brundir",0x8000a48,0x01000000007C5537,"Vanen",0x512,61878,"Overload",0x8,17460,0,8,2000,0,0,nil,nil,nil

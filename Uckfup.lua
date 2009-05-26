@@ -17,6 +17,7 @@ function Uckfup:ResetData()
 	for k in pairs(self.reported) do self.reported[k] = nil end
 	for k in pairs(self.lastEvents) do self.lastEvents[k] = nil end
 	for k in pairs(self.sendTimeouts) do self.sendTimeouts[k] = nil end
+	for k in pairs(self.lastTick) do self.lastTick[k] = nil end
 	for _, list in pairs(self.sendQueue) do for i=#(list), 1, -1 do table.remove(list, i) end end
 end
 
@@ -52,6 +53,7 @@ function Uckfup:ADDON_LOADED(event, addon)
 	self.spells = UckfupSpells
 	self.auras = UckfupAuras
 	self.lastEvents = {}
+	self.lastTick = {}
 	self.reported = {}
 	self.ticks = {}
 	self.sendTimeouts = {}
@@ -222,7 +224,16 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 				
 				-- Either no threshold on damage/regen, or we exceeded the amount
 				if( not spellData.threshold or spellData.threshold <= amount ) then
-					self.lastEvents[id] = time + (spellData.throttle or 30)
+					-- Throttle how quickly charges count up
+					if( spellData.hitThrottle ) then
+						if( self.lastTick[id] and self.lastTick[id] > time ) then
+							return
+						end
+						
+						self.lastTick[id] = time + spellData.hitThrottle
+					end
+					
+					self.lastEvents[id] = time + (spellData.hitExpires or spellData.throttle or 30)
 					self.ticks[id] = (self.ticks[id] or 0) + 1
 					
 					-- Either no rqeuired number of hits before whining, or we exceeded it.
