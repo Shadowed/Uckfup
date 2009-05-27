@@ -195,7 +195,7 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 			local byPlayer = bit.band(sourceFlags, COMBATLOG_OBJECT_TYPE_PLAYER) > 0
 			
 			-- The person who did the event isn't a player, and the target of the event isn't a player either.
-			if( not byPlayer and not bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) > 0 ) then
+			if( not byPlayer and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) == 0 ) then
 				return
 			end
 			
@@ -207,7 +207,7 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 				if( not byPlayer ) then
 					name, guid = destName, destGUID
 				end
-				
+								
 				local id = spellName .. guid
 				local time = GetTime()
 				

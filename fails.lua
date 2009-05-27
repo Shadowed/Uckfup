@@ -19,6 +19,10 @@
 		hits = 3,
 		-- How much damage/energize/etc needs to have happened before it counts as a fail
 		threshold = 1000,
+		-- How many seconds to throttle charges by, so 0.50 means that it will only add a new charge every 0.50 seconds
+		hitThrottle = 0.50,
+		-- This is an independant time that the charges will expire at in seconds, so 3 means after 3 seconds of no data, they reset.
+		hitExpires = 3,
 	}
 ]]
 
