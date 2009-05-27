@@ -156,12 +156,13 @@ end
 
 -- Check for combatlog fails
 local COMBATLOG_OBJECT_TYPE_PLAYER = COMBATLOG_OBJECT_TYPE_PLAYER
+local COMBATLOG_OBJECT_TYPE_GUARDIAN = COMBATLOG_OBJECT_TYPE_GUARDIAN
 local eventRegistered = {["SPELL_DAMAGE"] = true, ["SPELL_INTERRUPT"] = true, ["SPELL_ENERGIZE"] = true, ["SPELL_DISPEL"] = true, ["SPELL_PERIODIC_DAMAGE"] = true}
 function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceGUID, sourceName, sourceFlags, destGUID, destName, destFlags, ...)
-	if( not eventRegistered[eventType] ) then
+	if( not eventRegistered[eventType] or bit.band(sourceFlags, COMBATLOG_OBJECT_TYPE_GUARDIAN) > 0 or bit.band(destFlags, COMBATLOG_OBJECT_TYPE_GUARDIAN) > 0 ) then
 		return
 	end
-	
+
 	-- Periodic ticks
 	if( eventType == "SPELL_PERIODIC_DAMAGE" and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) > 0 ) then
 		local spellID, spellName, spellSchool, auraType = ...
