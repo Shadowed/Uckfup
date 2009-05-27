@@ -1,5 +1,20 @@
 UckfupLocals = {
 	["%s failed at %s"] = "%s failed at %s",
+	
+	-- Boss names for GUI
+	["Hodir"] = "Hodir",
+	["Razorscale"] = "Razorscale",
+	["Ignis the Furnace Master"] = "Ignis the Furnace Master",
+	["XT-002 Deconstructor"] = "XT-002 Deconstructor",
+	["Iron Council"] = "Iron Council",
+	["Auriaya"] = "Auriaya",
+	["Thorim"] = "Thorim",
+	["Freya"] = "Freya",
+	["Mimiron"] = "Mimiron",
+	["General Vezax"] = "General Vezax",
+	["Yogg-Saron"] = "Yogg-Saron",
+	["Sartharion"] = "Sartharion",
+	["Heigan"] = "Heigan",
 
 	-- Slash commands
 	["Now reporting fails to %s chat."] = "Now reporting fails to %s chat.",

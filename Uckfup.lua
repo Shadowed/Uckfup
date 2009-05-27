@@ -6,6 +6,7 @@ Uckfup = {}
 
 local L = UckfupLocals
 local REPORT_TIMEOUT = 5
+local mobGUIDMap = {}
 
 -- Resets all data we were saving, this works out well because technically the mod is disabled whenever you release
 -- it's pretty reliable that at some point, you will release and the stored data can be reset, odds are if you one don't die a few times
@@ -18,6 +19,8 @@ function Uckfup:ResetData()
 	for k in pairs(self.lastEvents) do self.lastEvents[k] = nil end
 	for k in pairs(self.sendTimeouts) do self.sendTimeouts[k] = nil end
 	for k in pairs(self.lastTick) do self.lastTick[k] = nil end
+	for k in pairs(self.attackFails) do self.attackFails[k] = nil end
+	for k in pairs(mobGUIDMap) do mobGUIDMap[k] = nil end
 	for _, list in pairs(self.sendQueue) do for i=#(list), 1, -1 do table.remove(list, i) end end
 end
 
@@ -52,12 +55,14 @@ function Uckfup:ADDON_LOADED(event, addon)
 
 	self.spells = UckfupSpells
 	self.auras = UckfupAuras
+	self.attacks = UckfupAttacks
 	self.lastEvents = {}
 	self.lastTick = {}
 	self.reported = {}
 	self.ticks = {}
 	self.sendTimeouts = {}
 	self.sendQueue = {}
+	self.attackFails = {}
 	
 	self.frame:UnregisterEvent("ADDON_LOADED")
 	self.frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
@@ -157,17 +162,35 @@ end
 -- Check for combatlog fails
 local COMBATLOG_OBJECT_TYPE_PLAYER = COMBATLOG_OBJECT_TYPE_PLAYER
 local COMBATLOG_OBJECT_TYPE_GUARDIAN = COMBATLOG_OBJECT_TYPE_GUARDIAN
-local eventRegistered = {["SPELL_DAMAGE"] = true, ["SPELL_INTERRUPT"] = true, ["SPELL_ENERGIZE"] = true, ["SPELL_DISPEL"] = true, ["SPELL_PERIODIC_DAMAGE"] = true}
+local eventRegistered = {["SPELL_AURA_APPLIED_DOSE"] = true, ["SPELL_DAMAGE"] = true, ["SPELL_INTERRUPT"] = true, ["SPELL_ENERGIZE"] = true, ["SPELL_DISPEL"] = true, ["SPELL_PERIODIC_DAMAGE"] = true}
 function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceGUID, sourceName, sourceFlags, destGUID, destName, destFlags, ...)
 	if( not eventRegistered[eventType] or bit.band(sourceFlags, COMBATLOG_OBJECT_TYPE_GUARDIAN) > 0 or bit.band(destFlags, COMBATLOG_OBJECT_TYPE_GUARDIAN) > 0 ) then
 		return
 	end
 
+	-- Aura stacks change
+	if( eventType == "SPELL_AURA_APPLIED_DOSE" and bit.band(sourceFlags, COMBATLOG_OBJECT_TYPE_NPC) > 0 ) then
+		local spellID, spellName, spellSchool, auraType, stacks = ...
+		local spellData = self.attacks[spellName]
+		if( spellData and spellData.event == eventType and auraType == spellData.auraType and spellData.mob == self:GetMobID(sourceGUID) ) then
+			if( stacks >= spellData.stopAt ) then
+				self.attackFails[spellData.mob] = spellName
+			end
+		end
+	
+	-- Aura faded
+	elseif( eventType == "SPELL_AURA_REMOVED" and bit.band(sourceFlags, COMBATLOG_OBJECT_TYPE_NPC) > 0 ) then
+		local spellID, spellName, spellSchool, auraType = ...
+		local spellData = self.attacks[spellName]
+		if( spellData and spellData.event == eventType and auraType == spellData.auraType and spellData.mob == self:GetMobID(sourceGUID) ) then
+			self.attackFails[spellData.mob] = nil
+		end
+		
 	-- Periodic ticks
-	if( eventType == "SPELL_PERIODIC_DAMAGE" and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) > 0 ) then
+	elseif( eventType == "SPELL_PERIODIC_DAMAGE" and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) > 0 ) then
 		local spellID, spellName, spellSchool, auraType = ...
 		local spellData = self.spells[spellName]
-		if( spellData and spellData.type == eventType ) then
+		if( spellData and spellData.event == eventType ) then
 			local id = spellName .. destGUID
 			local time = GetTime()
 			-- Check for data expiration
@@ -190,8 +213,20 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 	elseif( eventType == "SPELL_DAMAGE" or eventType == "SPELL_ENERGIZE" ) then
 		local spellID, spellName, spellSchool, amount = ...
 		
+		-- Check for attack fails
+		if( bit.band(sourceFlags, COMBATLOG_OBJECT_TYPE_PLAYER) > 0 and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_NPC) > 0 ) then
+			local mobID = self:GetMobID(destGUID)
+			if( self.attackFails[mobID] ) then
+				local failSpell = spellData[self.attackFails[mobID]]
+				if( failSpell ) then
+					self:TriggerFail(failSpell .. destGUID, spellData.throttle, sourceGUID, sourceName, failSpell)
+				end
+			end
+		end
+		
+		-- Check for spell fails
 		local spellData = self.spells[spellName]
-		if( spellData and spellData.type == eventType ) then
+		if( spellData and spellData.event == eventType ) then
 			local byPlayer = bit.band(sourceFlags, COMBATLOG_OBJECT_TYPE_PLAYER) > 0
 			
 			-- The person who did the event isn't a player, and the target of the event isn't a player either.
@@ -250,7 +285,7 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 	elseif( eventType == "SPELL_INTERRUPT" and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) > 0 ) then
 		local spellID, spellName, spellSchool, extraSpellID, extraSpellName, extraSpellSchool = ...
 		local spellData = self.spells[spellName]
-		if( spellData and spellData.type == eventType ) then
+		if( spellData and spellData.event == eventType ) then
 			self:TriggerFail(id, spellData.throttle, destGUID, destName, spellName)
 		end
 		
@@ -258,14 +293,16 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 	elseif( eventType == "SPELL_DISPEL" and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) > 0 ) then
 		local spellID, spellName, spellSchool, extraSpellID, extraSpellName, extraSpellSchool = ...
 		local spellData = self.spells[spellName]
-		if( spellData and spellData.type == eventType ) then
+		if( spellData and spellData.event == eventType ) then
 			self:TriggerFail(id, spellData.throttle, destGUID, destName, extraSpellName)
 		end
 	end
 end
 
 function Uckfup:GetMobID(guid)
-	return tonumber(string.sub(guid, 8, 12), 16)
+	if( mobGUIDMap[guid] ) then return mobGUIDMap[guid] end
+	mobGUIDMap[guid] = tonumber(string.sub(guid, 8, 12), 16)
+	return mobGUIDMap[guid]
 end
 
 -- Random enabler
