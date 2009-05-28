@@ -38,7 +38,7 @@ local L = UckfupLocals
 UckfupAttacks = {
 	-- Ulduar: Freya
 	-- Hardened Bark / SPELL_AURA_APPLIED_DOSE,0xF13000809400BD3B,"Snaplasher",0xa48,0xF13000809400BD3B,"Snaplasher",0xa48,64190,"Hardened Bark",0x1,BUFF,3
-	[GetSpellInfo(64190)] = {boss = L["Freya"], event = "SPELL_AURA_APPLIED_DOSE", mob = 32916, stopAt = 30, throttle = 10, auraevent = "BUFF"}
+	[GetSpellInfo(64190)] = {boss = L["Freya"], event = "SPELL_AURA_APPLIED_DOSE", mob = 32916, stopAt = 30, throttle = 10, auraType = "BUFF"}
 }
 
 UckfupAuras = {
@@ -74,7 +74,7 @@ UckfupSpells = {
 
 	-- Ulduar: Auriaya
 	-- Seeping Feral Essence / 5/16 13:48:58.359 SPELL_DAMAGE,0x0000000000000000,nil,0x80000000,0x05000000013436F1,"Mordant",0x514,64459,"Seeping Feral Essence",0x20,3353,0,32,900,0,0,nil,nil,nil
-	[GetSpellInfo(63023)] = {boss = L["Auriaya"], event = "SPELL_DAMAGE", throttle = 5},
+	[GetSpellInfo(64459)] = {boss = L["Auriaya"], event = "SPELL_DAMAGE", throttle = 5},
 
 	-- Ulduar: Hodir
 	-- Ice Shards / 5/21 17:21:08.473  SPELL_DAMAGE,0xF130008191009ADF,"Icicle",0xa48,0x0500000002A13CA4,"Taec",0x512,62457,"Ice Shards",0x10,10864,0,16,2800,0,0,nil,nil,nil

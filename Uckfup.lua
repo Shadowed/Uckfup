@@ -216,10 +216,12 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 		-- Check for attack fails
 		if( bit.band(sourceFlags, COMBATLOG_OBJECT_TYPE_PLAYER) > 0 and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_NPC) > 0 ) then
 			local mobID = self:GetMobID(destGUID)
-			if( self.attackFails[mobID] ) then
-				local failSpell = spellData[self.attackFails[mobID]]
-				if( failSpell ) then
+			if( mobID and self.attackFails[mobID] ) then
+				local spellData = self.attacks[self.attackFails[mobID]]
+				local failSpell = self.attackFails[mobID]
+				if( spellData ) then
 					self:TriggerFail(failSpell .. destGUID, spellData.throttle, sourceGUID, sourceName, failSpell)
+					return
 				end
 			end
 		end
@@ -340,18 +342,19 @@ SlashCmdList["UCKFUP"] = function(msg)
 	cmd = string.lower(cmd or "")
 	
 	if( cmd == "report" and arg ) then
+		local lowerArg = string.lower(arg)
 		if( tonumber(arg) ) then
 			UckfupDB.report = arg
 			UckfupDB.reportType = "chat"
 			self:Print(string.format(L["Now reporting fails to chat frame #%s."], arg))
-		elseif( arg == "raid" or arg == "party" or arg == "guild" or arg == "officer" or arg == "say" ) then
-			UckfupDB.report = arg
+		elseif( lowerArg == "raid" or lowerArg == "party" or lowerArg == "guild" or lowerArg == "officer" or lowerArg == "say" ) then
+			UckfupDB.report = lowerArg
 			UckfupDB.reportType = "main"
-			self:Print(string.format(L["Now reporting fails to %s chat."], arg))
+			self:Print(string.format(L["Now reporting fails to %s chat."],lowerArg))
 		else
-			UckfupDB.report = arg
+			UckfupDB.report = lowerArg
 			UckfupDB.reportType = "channel"
-			self:Print(string.format(L["Now reporting fails to channel %s."], arg))
+			self:Print(string.format(L["Now reporting fails to channel %s."],lowerArg))
 		end
 	elseif( cmd == "toggle" ) then
 		UckfupDB.enabled = not UckfupDB.enabled
@@ -364,7 +367,7 @@ SlashCmdList["UCKFUP"] = function(msg)
 		end
 	else
 		self:Print(L["Slash commands"])
-		self:Echo(L["/fail report <channel> - Channel to report to, supports RAID/PARTY/SAY/GUILD/OFFICER/Channel name/Chat frame #"])
+		self:Echo(L["/fail report <channel> - Channel to report to, supports raid/party/say/guild/officer/Channel name/Chat frame 1 - 7"])
 		self:Echo(L["/fail toggle - Toggles if this mod is enabled."])
 	end
 end
