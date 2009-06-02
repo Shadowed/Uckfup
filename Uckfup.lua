@@ -52,10 +52,11 @@ end
 function Uckfup:ADDON_LOADED(event, addon)
 	if( addon ~= "Uckfup" ) then return end
 	UckfupDB = UckfupDB or {enabled = true, report = "RAID", reportType = "main"}
-
-	self.spells = UckfupSpells
-	self.auras = UckfupAuras
-	self.attacks = UckfupAttacks
+	UckfupDB.disabled = UckfupDB.disabled or {[64190] = true}
+	
+	self.spells = {}
+	self.auras = {}
+	self.attacks = {}
 	self.lastEvents = {}
 	self.lastTick = {}
 	self.reported = {}
@@ -71,6 +72,28 @@ function Uckfup:ADDON_LOADED(event, addon)
 	self.frame.announceElapsed = 0
 	self.frame.announcements = 0
 	self.frame:Hide()
+
+	-- Load our DB in and add spell info and stuff
+	for spellID, fail in pairs(UckfupSpells) do
+		fail.spellID = spellID
+		fail.disabled = UckfupDB.disabled[spellID]
+		fail.boss = fail.boss or L["Unknown"]
+		
+		local name = GetSpellInfo(spellID)
+		if( fail.type == "AURA" ) then
+			self.auras[name] = fail
+		elseif( fail.type == "SWAP" ) then
+			self.attacks[name] = fail
+		else
+			self.spells[name] = fail
+		end
+	end
+end
+
+function Uckfup:UpdateStatus()
+	for spellID, fail in pairs(UckfupSpells) do
+		fail.disabled = UckfupDB.disabled[spellID]
+	end
 end
 
 local chatFrames = {}
@@ -172,7 +195,7 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 	if( eventType == "SPELL_AURA_APPLIED_DOSE" and bit.band(sourceFlags, COMBATLOG_OBJECT_TYPE_NPC) > 0 ) then
 		local spellID, spellName, spellSchool, auraType, stacks = ...
 		local spellData = self.attacks[spellName]
-		if( spellData and spellData.event == eventType and auraType == spellData.auraType and spellData.mob == self:GetMobID(sourceGUID) ) then
+		if( spellData and not spellData.disabled and spellData.event == eventType and auraType == spellData.auraType and spellData.mob == self:GetMobID(sourceGUID) ) then
 			if( stacks >= spellData.stopAt ) then
 				self.attackFails[spellData.mob] = spellName
 			end
@@ -182,7 +205,7 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 	elseif( eventType == "SPELL_AURA_REMOVED" and bit.band(sourceFlags, COMBATLOG_OBJECT_TYPE_NPC) > 0 ) then
 		local spellID, spellName, spellSchool, auraType = ...
 		local spellData = self.attacks[spellName]
-		if( spellData and spellData.event == eventType and auraType == spellData.auraType and spellData.mob == self:GetMobID(sourceGUID) ) then
+		if( spellData and not spellData.disabled and spellData.event == eventType and auraType == spellData.auraType and spellData.mob == self:GetMobID(sourceGUID) ) then
 			self.attackFails[spellData.mob] = nil
 		end
 		
@@ -190,7 +213,7 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 	elseif( eventType == "SPELL_PERIODIC_DAMAGE" and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) > 0 ) then
 		local spellID, spellName, spellSchool, auraType = ...
 		local spellData = self.spells[spellName]
-		if( spellData and spellData.event == eventType ) then
+		if( spellData and not spellData.disabled and spellData.event == eventType ) then
 			local id = spellName .. destGUID
 			local time = GetTime()
 			-- Check for data expiration
@@ -228,7 +251,7 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 		
 		-- Check for spell fails
 		local spellData = self.spells[spellName]
-		if( spellData and spellData.event == eventType ) then
+		if( spellData and not spellData.disabled and spellData.event == eventType ) then
 			local byPlayer = bit.band(sourceFlags, COMBATLOG_OBJECT_TYPE_PLAYER) > 0
 			
 			-- The person who did the event isn't a player, and the target of the event isn't a player either.
@@ -293,7 +316,7 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 	elseif( eventType == "SPELL_INTERRUPT" and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) > 0 ) then
 		local spellID, spellName, spellSchool, extraSpellID, extraSpellName, extraSpellSchool = ...
 		local spellData = self.spells[spellName]
-		if( spellData and spellData.event == eventType ) then
+		if( spellData and not spellData.disabled and spellData.event == eventType ) then
 			self:TriggerFail(id, spellData.throttle, destGUID, destName, spellName)
 		end
 		
@@ -301,7 +324,7 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 	elseif( eventType == "SPELL_DISPEL" and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) > 0 ) then
 		local spellID, spellName, spellSchool, extraSpellID, extraSpellName, extraSpellSchool = ...
 		local spellData = self.spells[spellName]
-		if( spellData and spellData.event == eventType ) then
+		if( spellData and not spellData.disabled and spellData.event == eventType ) then
 			self:TriggerFail(id, spellData.throttle, destGUID, destName, extraSpellName)
 		end
 	end
@@ -371,10 +394,76 @@ SlashCmdList["UCKFUP"] = function(msg)
 		else
 			self:Print(L["Uckfup is now disabled, you will need to type /fail toggle to enable it."])
 		end
+	elseif( arg and ( cmd == "enable" or cmd == "disable" ) ) then
+		local setStatus = cmd == "disable" and true or nil
+		local setString = setStatus and L["%d spells disabled: %s"] or L["%d spells enabled: %s"]
+		local list = {}
+		
+		local scanArg = string.lower(arg)
+		local bossName
+		for spellID, spell in pairs(UckfupSpells) do
+			local name = GetSpellInfo(spellID)
+			if( string.lower(name) == scanArg or string.lower(spell.boss) == scanArg ) then
+				bossName = spell.boss
+				UckfupDB.disabled[spellID] = setStatus
+
+				if( UckfupDB.disabled[spellID] ) then
+					table.insert(list, string.format("%s|Hspell:%d|h[%s]|h|r", RED_FONT_COLOR_CODE, spellID, name))
+				else
+					table.insert(list, string.format("|cff71d5ff|Hspell:%d|h[%s]|h|r", spellID, name))
+				end
+			end
+		end
+		
+		if( #(list) > 1 ) then
+			self:Echo(string.format("|cff33ff99%s|r", bossName))
+			self:Echo(string.format(setString, #(list), table.concat(list, "")))
+		elseif( #(list) == 1 ) then
+			if( setStatus ) then
+				self:Echo(string.format(L["Disabled spell %s on %s"], list[1], bossName))
+			else
+				self:Echo(string.format(L["Enabled spell %s on %s"], list[1], bossName))
+			end
+		else
+			self:Echo(string.format(L["No spells found to enable or disable using the filter \"%s\""], arg))
+		end
+		
+		self:UpdateStatus()
+		
+	elseif( cmd == "list" ) then
+		self:Print(L["Listing current fail status"])
+		
+		local spells = {}
+		for spellID, spell in pairs(UckfupSpells) do
+			if( not arg or string.lower(spell.boss) == string.lower(arg) ) then
+				spells[spell.boss] = spells[spell.boss] or {}
+
+				local name = GetSpellInfo(spellID)
+				if( UckfupDB.disabled[spellID] ) then
+					table.insert(spells[spell.boss], string.format("%s|Hspell:%d|h[%s]|h|r", RED_FONT_COLOR_CODE, spellID, name))
+				else
+					table.insert(spells[spell.boss], string.format("|cff71d5ff|Hspell:%d|h[%s]|h|r", spellID, name))
+				end
+			end
+		end
+		
+		for boss, list in pairs(spells) do
+			if( #(list) > 3 ) then
+				self:Echo(string.format(L["|cff33ff99%s|r (%d fails)"], boss, #(list)))
+				self:Echo(table.concat(list, ", "))
+			else
+				self:Echo(string.format(L["|cff33ff99%s|r (%d fails)"] .. ": %s", boss, #(list), table.concat(list, "")))
+			end
+		end
 	else
 		self:Print(L["Slash commands"])
 		self:Echo(L["/fail report <channel> - Channel to report to, supports raid/party/say/guild/officer/Channel name/Chat frame 1 - 7"])
 		self:Echo(L["/fail toggle - Toggles if this mod is enabled."])
+		self:Echo(L["/fail enable <name/boss> - Enables a fail, if you pass the boss name then all fails for that boss are enabled."])
+		self:Echo(L["/fail disable <name/boss> - Disables a fail, if you pass the boss name then all fails for that boss are disabled."])
+		self:Echo(L["/fail list <boss> - Lists the status of all fails if they are enabled or disabled, optional you can pass the boss name to show only his fails."])
+		--self:Echo(L["For local output, use a chat frame number, typically your main chat frame is #1, and your Combat Log is #2."])
+		self:Echo(L["Spell name is the spell of the fail you see in chat (and the one in /fail list), boss is the full boss name so Ignis the Furnace Master or XT-002 Deconstructor."])
 	end
 end
 

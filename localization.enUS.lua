@@ -4,6 +4,7 @@ UckfupLocals = {
 	-- Boss names for GUI
 	["Hodir"] = "Hodir",
 	["Razorscale"] = "Razorscale",
+	["Flame Leviathan"] = "Flame Leviathan",
 	["Ignis the Furnace Master"] = "Ignis the Furnace Master",
 	["XT-002 Deconstructor"] = "XT-002 Deconstructor",
 	["Iron Council"] = "Iron Council",
@@ -15,7 +16,9 @@ UckfupLocals = {
 	["Yogg-Saron"] = "Yogg-Saron",
 	["Sartharion"] = "Sartharion",
 	["Heigan"] = "Heigan",
-
+	["Unknown"] = "Unknown",
+	["Kologarn"] = "Kologarn",
+	
 	-- Slash commands
 	["Now reporting fails to %s chat."] = "Now reporting fails to %s chat.",
 	["Now reporting fails to chat frame #%s."] = "Now reporting fails to chat frame #%s.",
@@ -25,4 +28,16 @@ UckfupLocals = {
 	["Slash commands"] = "Slash commands",
 	["/fail report <channel> - Channel to report to, supports raid/party/say/guild/officer/Channel name/Chat frame 1 - 7"] = "/fail report <channel> - Channel to report to, supports raid/party/say/guild/officer/Channel name/Chat frame 1 - 7",
 	["/fail toggle - Toggles if this mod is enabled."] = "/fail toggle - Toggles if this mod is enabled.",
+	["For local output, use a chat frame number, typically your main chat frame is #1, and your Combat Log is #2."] = "For local output, use a chat frame number, typically your main chat frame is #1, and your Combat Log is #2.",
+	["/fail list <boss> - Lists the status of all fails if they are enabled or disabled, optional you can pass the boss name to show only his fails." ] = "/fail list <boss> - Lists the status of all fails if they are enabled or disabled, optional you can pass the boss name to show only his fails.",
+	["/fail disable <name/boss> - Disables a fail, if you pass the boss name then all fails for that boss are disabled."] = "/fail disable <name/boss> - Disables a fail, if you pass the boss name then all fails for that boss are disabled.",
+	["/fail enable <name/boss> - Enables a fail, if you pass the boss name then all fails for that boss are enabled."] = "/fail enable <name/boss> - Enables a fail, if you pass the boss name then all fails for that boss are enabled.",
+	["|cff33ff99%s|r (%d fails)"] = "|cff33ff99%s|r (%d fails)",
+	["Spell name is the spell of the fail you see in chat (and the one in /fail list), boss is the full boss name so Ignis the Furnace Master or XT-002 Deconstructor."] = "Spell name is the spell of the fail you see in chat (and the one in /fail list), boss is the full boss name so Ignis the Furnace Master or XT-002 Deconstructor.",
+	["%d spells disabled: %s"] = "%d spells disabled: %s",
+	["%d spells enabled: %s"] = "%d spells enabled: %s",
+	["Listing current fail status"] = "Listing current fail status", 
+	["Enabled spell %s on %s"] = "Enabled spell %s on %s",
+	["Disabled spell %s on %s"] = "Disabled spell %s on %s",
+	["No spells found to enable or disable using the filter \"%s\""] = "No spells found to enable or disable using the filter \"%s\"",
 }
