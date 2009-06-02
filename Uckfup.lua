@@ -80,7 +80,7 @@ function Uckfup:TriggerFail(id, throttle, destGUID, destName, spellName)
 	elseif( throttle ) then
 		self.reported[id] = GetTime() + throttle
 	end
-	
+
 	-- Start our timeout before reporting the list of bads
 	if( not self.sendTimeouts[spellName] ) then
 		self.sendTimeouts[spellName] = GetTime() + REPORT_TIMEOUT
@@ -167,7 +167,7 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 	if( not eventRegistered[eventType] or bit.band(sourceFlags, COMBATLOG_OBJECT_TYPE_GUARDIAN) > 0 or bit.band(destFlags, COMBATLOG_OBJECT_TYPE_GUARDIAN) > 0 ) then
 		return
 	end
-
+	
 	-- Aura stacks change
 	if( eventType == "SPELL_AURA_APPLIED_DOSE" and bit.band(sourceFlags, COMBATLOG_OBJECT_TYPE_NPC) > 0 ) then
 		local spellID, spellName, spellSchool, auraType, stacks = ...
@@ -235,7 +235,7 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 			if( not byPlayer and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) == 0 ) then
 				return
 			end
-			
+						
 			-- If it's done by a player, it obviously wasn't done by a mob so it's fine, if we have no mob data we don't care where it came from, if we DO have mob data
 			-- then will filter and make sure it's good
 			if( byPlayer or not spellData.mob or ( ( spellData.mob and spellData.mob == self:GetMobID(sourceGUID ) ) or ( spellData.secondMob and spellData.secondMob == self:GetMobID(sourceGUID) ) ) ) then
@@ -243,6 +243,11 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 				local name, guid, flag = sourceName, sourceGUID
 				if( not byPlayer ) then
 					name, guid = destName, destGUID
+				end
+				
+				-- Damage is by a player, the spell is flagged to ignore any charges gained through their self inflicted damage (Emo people)
+				if( byPlayer and spellData.skipPlayer and destGUID == sourceGUID ) then
+					return
 				end
 								
 				local id = spellName .. guid
@@ -270,13 +275,14 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 						
 						self.lastTick[id] = time + spellData.hitThrottle
 					end
-					
+										
 					self.lastEvents[id] = time + (spellData.hitExpires or spellData.throttle or 30)
 					self.ticks[id] = (self.ticks[id] or 0) + 1
-					
+
 					-- Either no rqeuired number of hits before whining, or we exceeded it.
 					if( not spellData.hits or self.ticks[id] >= spellData.hits ) then
 						self:TriggerFail(id, spellData.throttle, guid, name, spellName)
+						self.ticks[id] = nil
 					end
 				end
 			end

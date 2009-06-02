@@ -23,6 +23,8 @@
 		hitThrottle = 0.50,
 		-- This is an independant time that the charges will expire at in seconds, so 3 means after 3 seconds of no data, they reset.
 		hitExpires = 3,
+		-- Sets if the player should be ignored when setting charges
+		skipPlayer = true/false,
 	}
 ]]
 
@@ -60,9 +62,9 @@ UckfupSpells = {
 
 	-- Ulduar: XT-002 Deconstructor
 	-- Light Bomb / 5/16 12:27:24.579 SPELL_DAMAGE,0x05000000007A7977,"Alithia",0x10514,0x05000000007A7977,"Alithia",0x10514,63023,"Light Bomb",0x42,2250,0,66,0,0,0,nil,nil,nil
-	[GetSpellInfo(63023)] = {boss = L["XT-002 Deconstructor"], event = "SPELL_DAMAGE", hits = 3, hitThrottle = 0.50, hitExpires = 5, throttle = 5},
+	[GetSpellInfo(63023)] = {boss = L["XT-002 Deconstructor"], event = "SPELL_DAMAGE", hits = 3, skipPlayer = true, hitThrottle = 0.50, hitExpires = 5, throttle = 5},
 	-- Gravity Bomb
-	[GetSpellInfo(63024)] = {boss = L["XT-002 Deconstructor"], event = "SPELL_DAMAGE", hits = 2, hitExpires = 1, throttle = 5},
+	[GetSpellInfo(63024)] = {boss = L["XT-002 Deconstructor"], event = "SPELL_DAMAGE", hits = 1, skipPlayer = true, hitExpires = 1, throttle = 5},
 
 	-- Ulduar: Iron Council
 	-- Overload / 3/20 19:22:43.389  SPELL_DAMAGE,0xF130008059000703,"Stormcaller Brundir",0x8000a48,0x01000000007C5537,"Vanen",0x512,61878,"Overload",0x8,17460,0,8,2000,0,0,nil,nil,nil
