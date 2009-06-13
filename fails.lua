@@ -28,6 +28,8 @@
 		hitExpires = 3,
 		-- Sets if the player should be ignored when setting charges
 		skipPlayer = true/false,
+		-- Indicates that the spell cannot be spammy, and should immeditiately be reported
+		noSpam = true/false,
 	}
 ]]
 
@@ -51,9 +53,9 @@ UckfupSpells = {
 		
 	-- Ulduar: XT-002 Deconstructor
 	-- Light Bomb / 5/16 12:27:24.579 SPELL_DAMAGE,0x05000000007A7977,"Alithia",0x10514,0x05000000007A7977,"Alithia",0x10514,63023,"Light Bomb",0x42,2250,0,66,0,0,0,nil,nil,nil
-	[63023] = {boss = L["XT-002 Deconstructor"], event = "SPELL_DAMAGE", hits = 3, skipPlayer = true, hitThrottle = 0.50, hitExpires = 5, throttle = 5},
+	[63023] = {boss = L["XT-002 Deconstructor"], event = "SPELL_DAMAGE", hits = 3, noSpam = true, skipPlayer = true, hitThrottle = 0.50, hitExpires = 5, throttle = 5},
 	-- Gravity Bomb
-	[63024] = {boss = L["XT-002 Deconstructor"], event = "SPELL_DAMAGE", hits = 1, skipPlayer = true, hitExpires = 1, throttle = 5},
+	[63024] = {boss = L["XT-002 Deconstructor"], event = "SPELL_DAMAGE", hits = 1, noSpam = true, skipPlayer = true, hitExpires = 1, throttle = 5},
 
 	-- Ulduar: Iron Council
 	-- Overload / 3/20 19:22:43.389  SPELL_DAMAGE,0xF130008059000703,"Stormcaller Brundir",0x8000a48,0x01000000007C5537,"Vanen",0x512,61878,"Overload",0x8,17460,0,8,2000,0,0,nil,nil,nil
@@ -89,7 +91,7 @@ UckfupSpells = {
 	-- Unstable Energy / SPELL_PERIODIC_DAMAGE,0xF130008192004C98,"Sun Beam",0xa48,0x050000000024ECA2,"Segomos",0x514,62865,"Unstable Energy",0x8,5801,0,8,1699,0,0,nil,nil,nil
 	[62451] = {boss = L["Freya"], event = "SPELL_PERIODIC_DAMAGE", hits = 2},
 	-- Bind Life / 4/25 13:16:11.832 SPELL_AURA_APPLIED,0xF13000824B0030C4,"Misguided Nymph",0xa48,0xF13000824B0030C4,"Misguided Nymph",0xa48,63082,"Bind Life",0x8,BUFF
-	[62659] = {boss = L["Freya"], event = "SPELL_DISPEL"},
+	[62659] = {boss = L["Freya"], noSpam = true, event = "SPELL_DISPEL"},
 	-- Ground Tremor / 5/21 17:43:09.505 SPELL_INTERRUPT,0xF1300080920040F6,"Elder Stonebark",0x20a48,0x05000000000501EB,"Monthor",0x514,62932,"Ground Tremor",0x1,48465,"S
 	[62932] = {boss = L["Freya"], event = "SPELL_INTERRUPT"},
 
@@ -111,7 +113,7 @@ UckfupSpells = {
 
 	-- Ulduar: General Vezax
 	-- Saronite Vapors / 5/21 19:26:33.135 SPELL_ENERGIZE,0x0000000000000000,nil,0x80000000,0x05000000009E0446,"Tsurara",0x514,63337,"Saronite Vapors",0x20,400,0
-	[63337] = {boss = L["General Vezax"], event = "SPELL_ENERGIZE", threshold = 12800},
+	[63337] = {boss = L["General Vezax"], noSpam = true, event = "SPELL_ENERGIZE", threshold = 12800},
 	-- Shadow Crash / 4/16 22:06:17.885  SPELL_DAMAGE,0xF1300081F702D928,"General Vezax",0x10a48,0x05000000027FCDFE,"Kosie",0x514,62659,"Shadow Crash",0x20,9413,0,32,2285,0,0,nil,nil,nil
 	[62659] = {boss = L["General Vezax"], event = "SPELL_DAMAGE", throttle = 5},
 
