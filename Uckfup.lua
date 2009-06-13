@@ -5,7 +5,6 @@
 Uckfup = {}
 
 local L = UckfupLocals
-local REPORT_TIMEOUT = 5
 local mobGUIDMap = {}
 
 -- Resets all data we were saving, this works out well because technically the mod is disabled whenever you release
@@ -50,9 +49,10 @@ local function OnUpdate(self, elapsed)
 end
 
 function Uckfup:ADDON_LOADED(event, addon)
-	if( addon ~= "Uckfup" ) then return end
+	if( not IsAddOnLoaded("Uckfup") ) then return end
 	UckfupDB = UckfupDB or {enabled = true, report = "RAID", reportType = "main"}
 	UckfupDB.disabled = UckfupDB.disabled or {[64190] = true}
+	UckfupDB.reportTimeout = UckfupDB.reportTimeout or 5
 	
 	self.spells = {}
 	self.auras = {}
@@ -97,16 +97,16 @@ function Uckfup:UpdateStatus()
 end
 
 local chatFrames = {}
-function Uckfup:TriggerFail(id, throttle, destGUID, destName, spellName)
+function Uckfup:TriggerFail(id, throttle, destGUID, destName, spellName, noSpam)
 	if( throttle and self.reported[id] and self.reported[id] > GetTime() ) then
 		return
 	elseif( throttle ) then
 		self.reported[id] = GetTime() + throttle
 	end
-
+		
 	-- Start our timeout before reporting the list of bads
 	if( not self.sendTimeouts[spellName] ) then
-		self.sendTimeouts[spellName] = GetTime() + REPORT_TIMEOUT
+		self.sendTimeouts[spellName] = GetTime() + (noSpam and 0 or UckfupDB.reportTimeout)
 		self.frame.announcements = self.frame.announcements + 1
 	end
 
@@ -228,10 +228,10 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 
 			-- Either we aren't throttling by ticks, or we exceeded the limit before data expired
 			if( not spellData.ticks or self.ticks[id] >= spellData.ticks ) then
-				self:TriggerFail(id, spellData.throttle, destGUID, destName, spellName)
+				self:TriggerFail(id, spellData.throttle, destGUID, destName, spellName, spellData.noSpam)
 			end
 		end
-		
+				
 	-- Damage >:( + Energizer Bunny :)
 	elseif( eventType == "SPELL_DAMAGE" or eventType == "SPELL_ENERGIZE" ) then
 		local spellID, spellName, spellSchool, amount = ...
@@ -243,7 +243,7 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 				local spellData = self.attacks[self.attackFails[mobID]]
 				local failSpell = self.attackFails[mobID]
 				if( spellData ) then
-					self:TriggerFail(failSpell .. destGUID, spellData.throttle, sourceGUID, sourceName, failSpell)
+					self:TriggerFail(failSpell .. destGUID, spellData.throttle, sourceGUID, sourceName, failSpell, spellData.noSpam)
 					return
 				end
 			end
@@ -304,7 +304,7 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 
 					-- Either no rqeuired number of hits before whining, or we exceeded it.
 					if( not spellData.hits or self.ticks[id] >= spellData.hits ) then
-						self:TriggerFail(id, spellData.throttle, guid, name, spellName)
+						self:TriggerFail(id, spellData.throttle, guid, name, spellName, spellData.noSpam)
 						self.ticks[id] = nil
 					end
 				end
@@ -317,7 +317,7 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 		local spellID, spellName, spellSchool, extraSpellID, extraSpellName, extraSpellSchool = ...
 		local spellData = self.spells[spellName]
 		if( spellData and not spellData.disabled and spellData.event == eventType ) then
-			self:TriggerFail(id, spellData.throttle, destGUID, destName, spellName)
+			self:TriggerFail(id, spellData.throttle, destGUID, destName, spellName, spellData.noSpam)
 		end
 		
 	-- Managed to dispel or steal a buff
@@ -325,7 +325,7 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 		local spellID, spellName, spellSchool, extraSpellID, extraSpellName, extraSpellSchool = ...
 		local spellData = self.spells[spellName]
 		if( spellData and not spellData.disabled and spellData.event == eventType ) then
-			self:TriggerFail(id, spellData.throttle, destGUID, destName, extraSpellName)
+			self:TriggerFail(id, spellData.throttle, destGUID, destName, extraSpellName, spellData.noSpam)
 		end
 	end
 end
@@ -369,7 +369,7 @@ SlashCmdList["UCKFUP"] = function(msg)
 	local self = Uckfup
 	local cmd, arg = string.split(" ", msg or "", 2)
 	cmd = string.lower(cmd or "")
-	
+		
 	if( cmd == "report" and arg ) then
 		local lowerArg = string.lower(arg)
 		if( tonumber(arg) ) then
@@ -394,6 +394,9 @@ SlashCmdList["UCKFUP"] = function(msg)
 		else
 			self:Print(L["Uckfup is now disabled, you will need to type /fail toggle to enable it."])
 		end
+	elseif( cmd == "timeout" and arg ) then
+		UckfupDB.timeout = tonumber(arg) or 5
+		self:Print(string.format(L["Set fail grouping to %d seconds before output."], UckfupDB.timeout))
 	elseif( arg and ( cmd == "enable" or cmd == "disable" ) ) then
 		local setStatus = cmd == "disable" and true or nil
 		local setString = setStatus and L["%d spells disabled: %s"] or L["%d spells enabled: %s"]
@@ -462,7 +465,7 @@ SlashCmdList["UCKFUP"] = function(msg)
 		self:Echo(L["/fail enable <name/boss> - Enables a fail, if you pass the boss name then all fails for that boss are enabled."])
 		self:Echo(L["/fail disable <name/boss> - Disables a fail, if you pass the boss name then all fails for that boss are disabled."])
 		self:Echo(L["/fail list <boss> - Lists the status of all fails if they are enabled or disabled, optional you can pass the boss name to show only his fails."])
-		--self:Echo(L["For local output, use a chat frame number, typically your main chat frame is #1, and your Combat Log is #2."])
+		self:Echo(L["/fail timeout <seconds> - How many seconds to wait before outputting failures, this reduces spam when multiple people can fail at the same time."])
 		self:Echo(L["Spell name is the spell of the fail you see in chat (and the one in /fail list), boss is the full boss name so Ignis the Furnace Master or XT-002 Deconstructor."])
 	end
 end

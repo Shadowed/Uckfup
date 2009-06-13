@@ -32,6 +32,7 @@ UckfupLocals = {
 	["/fail list <boss> - Lists the status of all fails if they are enabled or disabled, optional you can pass the boss name to show only his fails." ] = "/fail list <boss> - Lists the status of all fails if they are enabled or disabled, optional you can pass the boss name to show only his fails.",
 	["/fail disable <name/boss> - Disables a fail, if you pass the boss name then all fails for that boss are disabled."] = "/fail disable <name/boss> - Disables a fail, if you pass the boss name then all fails for that boss are disabled.",
 	["/fail enable <name/boss> - Enables a fail, if you pass the boss name then all fails for that boss are enabled."] = "/fail enable <name/boss> - Enables a fail, if you pass the boss name then all fails for that boss are enabled.",
+	["/fail timeout <seconds> - How many seconds to wait before outputting failures, this reduces spam when multiple people can fail at the same time."] = "/fail timeout <seconds> - How many seconds to wait before outputting failures, this reduces spam when multiple people can fail at the same time.",
 	["|cff33ff99%s|r (%d fails)"] = "|cff33ff99%s|r (%d fails)",
 	["Spell name is the spell of the fail you see in chat (and the one in /fail list), boss is the full boss name so Ignis the Furnace Master or XT-002 Deconstructor."] = "Spell name is the spell of the fail you see in chat (and the one in /fail list), boss is the full boss name so Ignis the Furnace Master or XT-002 Deconstructor.",
 	["%d spells disabled: %s"] = "%d spells disabled: %s",
@@ -40,4 +41,5 @@ UckfupLocals = {
 	["Enabled spell %s on %s"] = "Enabled spell %s on %s",
 	["Disabled spell %s on %s"] = "Disabled spell %s on %s",
 	["No spells found to enable or disable using the filter \"%s\""] = "No spells found to enable or disable using the filter \"%s\"",
+	["Set fail grouping to %d seconds before output."] = "Set fail grouping to %d seconds before output.",
 }
