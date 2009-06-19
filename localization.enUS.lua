@@ -20,6 +20,7 @@ UckfupLocals = {
 	["Kologarn"] = "Kologarn",
 	
 	-- Slash commands
+	["Once %d%% of the raid is dead, Uckfup will stop reporting."] = "Once %d%% of the raid is dead, Uckfup will stop reporting.",
 	["Now reporting fails to %s chat."] = "Now reporting fails to %s chat.",
 	["Now reporting fails to chat frame #%s."] = "Now reporting fails to chat frame #%s.",
 	["Now reporting fails to channel %s."] = "Now reporting fails to channel %s.",
@@ -33,6 +34,7 @@ UckfupLocals = {
 	["/fail disable <name/boss> - Disables a fail, if you pass the boss name then all fails for that boss are disabled."] = "/fail disable <name/boss> - Disables a fail, if you pass the boss name then all fails for that boss are disabled.",
 	["/fail enable <name/boss> - Enables a fail, if you pass the boss name then all fails for that boss are enabled."] = "/fail enable <name/boss> - Enables a fail, if you pass the boss name then all fails for that boss are enabled.",
 	["/fail timeout <seconds> - How many seconds to wait before outputting failures, this reduces spam when multiple people can fail at the same time."] = "/fail timeout <seconds> - How many seconds to wait before outputting failures, this reduces spam when multiple people can fail at the same time.",
+	["/fail dead 0-100 - How much of the raid needs to be dead before Uckfup stops reporting, 25 means that 25% has to be dead, and 0 will make it always report."] = "/fail dead 0-100 - How much of the raid needs to be dead before Uckfup stops reporting, 25 means that 25% has to be dead, and 0 will make it always report.",
 	["|cff33ff99%s|r (%d fails)"] = "|cff33ff99%s|r (%d fails)",
 	["Spell name is the spell of the fail you see in chat (and the one in /fail list), boss is the full boss name so Ignis the Furnace Master or XT-002 Deconstructor."] = "Spell name is the spell of the fail you see in chat (and the one in /fail list), boss is the full boss name so Ignis the Furnace Master or XT-002 Deconstructor.",
 	["%d spells disabled: %s"] = "%d spells disabled: %s",
@@ -42,4 +44,5 @@ UckfupLocals = {
 	["Disabled spell %s on %s"] = "Disabled spell %s on %s",
 	["No spells found to enable or disable using the filter \"%s\""] = "No spells found to enable or disable using the filter \"%s\"",
 	["Set fail grouping to %d seconds before output."] = "Set fail grouping to %d seconds before output.",
+	["Uckfup will always report failures regardless of how many are dead."] = "Uckfup will always report failures regardless of how many are dead.",
 }

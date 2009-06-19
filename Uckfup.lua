@@ -5,7 +5,13 @@
 Uckfup = {}
 
 local L = UckfupLocals
+local instancePlayers = 25
+local raidUnits = {}
 local mobGUIDMap = {}
+
+for i=1, MAX_RAID_MEMBERS do
+	table.insert(raidUnits, "raid" .. i)
+end
 
 -- Resets all data we were saving, this works out well because technically the mod is disabled whenever you release
 -- it's pretty reliable that at some point, you will release and the stored data can be reset, odds are if you one don't die a few times
@@ -53,6 +59,7 @@ function Uckfup:ADDON_LOADED(event, addon)
 	UckfupDB = UckfupDB or {enabled = true, report = "RAID", reportType = "main"}
 	UckfupDB.disabled = UckfupDB.disabled or {[64190] = true}
 	UckfupDB.reportTimeout = UckfupDB.reportTimeout or 5
+	UckfupDB.deadPercent = UckfupDB.deadPercent or 0.50
 	
 	self.spells = {}
 	self.auras = {}
@@ -98,12 +105,30 @@ end
 
 local chatFrames = {}
 function Uckfup:TriggerFail(id, throttle, destGUID, destName, spellName, noSpam)
+	-- Check throttling
 	if( throttle and self.reported[id] and self.reported[id] > GetTime() ) then
 		return
 	elseif( throttle ) then
 		self.reported[id] = GetTime() + throttle
 	end
+	
+	-- Check if too many are dead
+	if( UckfupDB.deadPercent > 0 ) then
+		-- Use whichever is the lower number, so if you're 8 manning a 10 man we check it based off 8 players not 10.
+		local totalDead = 0
+		local totalPlayers = math.min(instancePlayers, GetNumRaidMembers())
+		for i=1, totalPlayers do
+			if( UnitIsDeadOrGhost(raidUnits[i]) or UnitHealth(raidUnits[i]) == 0 ) then
+				totalDead = totalDead + 1
+			end
+		end
 		
+		-- More than one person is dead, and the total dead exceeds the amount that need to be dead before we stop reporting
+		if( totalDead > 0 and ( totalDead / totalPlayers ) >= UckfupDB.deadPercent ) then
+			return
+		end
+	end
+	
 	-- Start our timeout before reporting the list of bads
 	if( not self.sendTimeouts[spellName] ) then
 		self.sendTimeouts[spellName] = GetTime() + (noSpam and 0 or UckfupDB.reportTimeout)
@@ -346,6 +371,13 @@ function Uckfup:ZONE_CHANGED_NEW_AREA()
 	else
 		self.frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 		self.frame:RegisterEvent("UNIT_AURA")
+		
+		-- How many players can be inside, this is what will check our stop reporting totals at.
+		if( GetInstanceDifficulty() == 2 ) then
+			instancePlayers = 25
+		else
+			instancePlayers = 10
+		end
 	end
 end
 
@@ -370,6 +402,7 @@ SlashCmdList["UCKFUP"] = function(msg)
 	local cmd, arg = string.split(" ", msg or "", 2)
 	cmd = string.lower(cmd or "")
 		
+	-- Change where it reports to
 	if( cmd == "report" and arg ) then
 		local lowerArg = string.lower(arg)
 		if( tonumber(arg) ) then
@@ -385,6 +418,18 @@ SlashCmdList["UCKFUP"] = function(msg)
 			UckfupDB.reportType = "channel"
 			self:Print(string.format(L["Now reporting fails to channel %s."],lowerArg))
 		end
+	-- Change how many need to be dead before it stops reporting
+	elseif( cmd == "dead" and arg ) then
+		arg = (tonumber(arg) or UckupDB.deadPercent) / 100
+		arg = arg > 1.0 and 1.0 or arg < 0 and 0 or arg
+		UckfupDB.deadPercent = arg
+
+		if( arg > 0 ) then
+			self:Print(string.format(L["Once %d%% of the raid is dead, Uckfup will stop reporting."], arg * 100))
+		else
+			self:Print(L["Uckfup will always report failures regardless of how many are dead."])
+		end
+	-- Toggle the entire mod on/off
 	elseif( cmd == "toggle" ) then
 		UckfupDB.enabled = not UckfupDB.enabled
 		self:ZONE_CHANGED_NEW_AREA()
@@ -394,14 +439,23 @@ SlashCmdList["UCKFUP"] = function(msg)
 		else
 			self:Print(L["Uckfup is now disabled, you will need to type /fail toggle to enable it."])
 		end
+	-- Change timeout before it sends a report
 	elseif( cmd == "timeout" and arg ) then
 		UckfupDB.timeout = tonumber(arg) or 5
 		self:Print(string.format(L["Set fail grouping to %d seconds before output."], UckfupDB.timeout))
+	-- Toggle spell status
 	elseif( arg and ( cmd == "enable" or cmd == "disable" ) ) then
 		local setStatus = cmd == "disable" and true or nil
 		local setString = setStatus and L["%d spells disabled: %s"] or L["%d spells enabled: %s"]
 		local list = {}
 		
+		-- They passed a spell link, parse out the spellID to toggle it by
+		local spellID = string.match(arg, "spell:(%d+)")
+		if( spellID ) then
+			arg = GetSpellInfo(spellID)
+		end
+		
+		-- Find all the spells to change
 		local scanArg = string.lower(arg)
 		local bossName
 		for spellID, spell in pairs(UckfupSpells) do
@@ -418,6 +472,7 @@ SlashCmdList["UCKFUP"] = function(msg)
 			end
 		end
 		
+		-- And now output what was changed
 		if( #(list) > 1 ) then
 			self:Echo(string.format("|cff33ff99%s|r", bossName))
 			self:Echo(string.format(setString, #(list), table.concat(list, "")))
@@ -432,7 +487,8 @@ SlashCmdList["UCKFUP"] = function(msg)
 		end
 		
 		self:UpdateStatus()
-		
+	
+	-- List spell toggle status
 	elseif( cmd == "list" ) then
 		self:Print(L["Listing current fail status"])
 		
@@ -466,6 +522,7 @@ SlashCmdList["UCKFUP"] = function(msg)
 		self:Echo(L["/fail disable <name/boss> - Disables a fail, if you pass the boss name then all fails for that boss are disabled."])
 		self:Echo(L["/fail list <boss> - Lists the status of all fails if they are enabled or disabled, optional you can pass the boss name to show only his fails."])
 		self:Echo(L["/fail timeout <seconds> - How many seconds to wait before outputting failures, this reduces spam when multiple people can fail at the same time."])
+		self:Echo(L["/fail dead 0-100 - How much of the raid needs to be dead before Uckfup stops reporting, 25 means that 25% has to be dead, and 0 will make it always report."])
 		self:Echo(L["Spell name is the spell of the fail you see in chat (and the one in /fail list), boss is the full boss name so Ignis the Furnace Master or XT-002 Deconstructor."])
 	end
 end

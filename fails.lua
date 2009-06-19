@@ -94,7 +94,7 @@ UckfupSpells = {
 	[62659] = {boss = L["Freya"], noSpam = true, event = "SPELL_DISPEL"},
 	-- Ground Tremor / 5/21 17:43:09.505 SPELL_INTERRUPT,0xF1300080920040F6,"Elder Stonebark",0x20a48,0x05000000000501EB,"Monthor",0x514,62932,"Ground Tremor",0x1,48465,"S
 	[62932] = {boss = L["Freya"], event = "SPELL_INTERRUPT"},
-
+	
 	-- Ulduar: Mimiron
 	-- Rocket Strike / 3/13 20:56:28.111  SPELL_DAMAGE,0xF1300084FF001E10,"Rocket Strike",0xa48,0x01000000007C088D,"Veev",0x511,63041,"Rocket Strike",0x4,676800,657890,4,200000,0,0,nil,nil,nil
 	[63041] = {boss = L["Mimiron"], event = "SPELL_DAMAGE"},
@@ -115,7 +115,7 @@ UckfupSpells = {
 	-- Saronite Vapors / 5/21 19:26:33.135 SPELL_ENERGIZE,0x0000000000000000,nil,0x80000000,0x05000000009E0446,"Tsurara",0x514,63337,"Saronite Vapors",0x20,400,0
 	[63337] = {boss = L["General Vezax"], noSpam = true, event = "SPELL_ENERGIZE", threshold = 12800},
 	-- Shadow Crash / 4/16 22:06:17.885  SPELL_DAMAGE,0xF1300081F702D928,"General Vezax",0x10a48,0x05000000027FCDFE,"Kosie",0x514,62659,"Shadow Crash",0x20,9413,0,32,2285,0,0,nil,nil,nil
-	[62659] = {boss = L["General Vezax"], event = "SPELL_DAMAGE", throttle = 5},
+	[62659] = {boss = L["General Vezax"], event = "SPELL_DAMAGE", mob = 33271, throttle = 5},
 
 	-- Ulduar: Yogg-Saron
 	-- Death Ray / 4/17 19:50:50.740  SPELL_DAMAGE,0x0000000000000000,nil,0x80000000,0x05000000027ECAFC,"Turyia",0x514,63884,"Death Ray",0x8,14400,0,8,2000,0,0,nil,nil,nil
