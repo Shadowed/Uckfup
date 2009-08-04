@@ -1,5 +1,5 @@
 --[[ 
-	Uckfup, Mayen/Selari from Illidan (US) PvP
+	Uckfup, Mayen/Shadowed
 ]]
 
 Uckfup = {}
@@ -95,6 +95,8 @@ function Uckfup:ADDON_LOADED(event, addon)
 			self.spells[name] = fail
 		end
 	end
+	
+	self:ZONE_CHANGED_NEW_AREA()
 end
 
 function Uckfup:UpdateStatus()
@@ -394,6 +396,11 @@ function Uckfup:Echo(msg)
 end
 
 -- Slash command
+SLASH_FAILBOT1 = nil
+SlashCmdList["FAILBOT"] = nil
+SLASH_FAIL1 = nil
+SlashCmdList["FAIL"] = nil
+
 SLASH_UCKFUP1 = "/uckfup"
 SLASH_UCKFUP2 = "/failbot"
 SLASH_UCKFUP3 = "/fail"
@@ -514,6 +521,9 @@ SlashCmdList["UCKFUP"] = function(msg)
 				self:Echo(string.format(L["|cff33ff99%s|r (%d fails)"] .. ": %s", boss, #(list), table.concat(list, "")))
 			end
 		end
+	elseif( cmd == "config" or cmd == "ui" ) then
+		InterfaceOptionsFrame:Show()
+		InterfaceOptionsFrame_OpenToCategory("Uckfup")
 	else
 		self:Print(L["Slash commands"])
 		self:Echo(L["/fail report <channel> - Channel to report to, supports raid/party/say/guild/officer/Channel name/Chat frame 1 - 7"])
@@ -523,7 +533,10 @@ SlashCmdList["UCKFUP"] = function(msg)
 		self:Echo(L["/fail list <boss> - Lists the status of all fails if they are enabled or disabled, optional you can pass the boss name to show only his fails."])
 		self:Echo(L["/fail timeout <seconds> - How many seconds to wait before outputting failures, this reduces spam when multiple people can fail at the same time."])
 		self:Echo(L["/fail dead 0-100 - How much of the raid needs to be dead before Uckfup stops reporting, 25 means that 25% has to be dead, and 0 will make it always report."])
-		self:Echo(L["Spell name is the spell of the fail you see in chat (and the one in /fail list), boss is the full boss name so Ignis the Furnace Master or XT-002 Deconstructor."])
+		
+		if( LibStub("AceConfig-3.0", true) and LibStub("AceConfigDialog-3.0", true) ) then
+			self:Echo(L["/fail config - Shows the configuration UI."])
+		end
 	end
 end
 
@@ -535,3 +548,154 @@ frame:SetScript("OnEvent", function(self, event, ...)
 end)
 
 Uckfup.frame = frame
+
+local register = CreateFrame("Frame", nil, InterfaceOptionsFrame)
+register:SetScript("OnShow", function(self)
+	self:SetScript("OnShow", nil)
+
+	-- Configuration
+	local AceConfig = LibStub("AceConfig-3.0", true)
+	local AceConfigDialog = LibStub("AceConfigDialog-3.0", true)
+	if not AceConfig or not AceConfigDialog then return end
+
+	local serverChannels = {}
+	local announceModes = {}
+	local stockAnnounceModes = {party = L["Party"], raid = L["Raid"], say = L["Say"], guild = L["Guild"], officer = L["Officer"]}
+
+	local function excludeChannels(...)
+		for i = 1, select("#", ...) do
+			serverChannels[select(i, ...)] = true
+		end
+	end
+
+	local options = {
+		type = "group",
+		args = {
+			enabled = {
+				order = 0,
+				name = L["Enabled"],
+				type = "toggle",
+				get = function()
+					return UckfupDB.enabled
+				end,
+				set = function(info, v)
+					UckfupDB.enabled = v
+				end
+			},
+			report = {
+				order = 1,
+				name = L["Report to..."],
+				type = "select",
+				get = function()
+					return UckfupDB.report
+				end,
+				set = function(info, arg)
+					if( tonumber(arg) ) then
+						UckfupDB.report = arg
+						UckfupDB.reportType = "chat"
+						Uckfup:Print(string.format(L["Now reporting fails to chat frame #%s."], arg))
+					elseif( arg == "raid" or arg == "party" or arg == "guild" or arg == "officer" or arg == "say" ) then
+						UckfupDB.report = arg
+						UckfupDB.reportType = "main"
+						Uckfup:Print(string.format(L["Now reporting fails to %s chat."],arg))
+					else
+						UckfupDB.report = arg
+						UckfupDB.reportType = "channel"
+						Uckfup:Print(string.format(L["Now reporting fails to channel %s."],arg))
+					end
+				end,
+				values = announceModes
+			},
+			reportTimeout = {
+				order = 2,
+				name = L["Report Timeout"],
+				type = "range",
+				min = 0,
+				max = 60,
+				step = 1,
+				bigStep = 1,
+				desc = L["Set fail grouping to X seconds before output."],
+				get = function()
+					return UckfupDB.timeout
+				end,
+				set = function(info, v)
+					UckfupDB.timeout = v
+				end
+			},
+			deadPercent = {
+				order = 3,
+				name = L["Death cut off"],
+				desc = L["Once more than the X percent of the raid is dead, Uckfup will stop reporting fails."],
+				type = "range",
+				min = 0.05,
+				max = 1,
+				isPercent = true,
+				step = 0.05,
+				bigStep = 0.05,
+				get = function()
+					return UckfupDB.deadPercent
+				end,
+				set = function(info, v)
+					UckfupDB.deadPercent = v
+				end
+			},
+			bosses = {
+			type = "group",
+			name = L["Bosses"],
+			args = {}
+			}
+		}
+	}
+
+	function Uckfup:InitMenu()
+		for spellID, spell in pairs(UckfupSpells) do
+			local name = GetSpellInfo(spellID)
+			local bossName = spell.boss
+			local subName = bossName:gsub(" ", "")
+			options.args.bosses.args[subName] = options.args.bosses.args[subName] or {
+				type = "group",
+				name = bossName,
+				args = {}
+			}
+			local t = options.args.bosses.args[subName].args
+			t[name:gsub(" ", "")] = {
+				type = "toggle",
+				name = name,
+				get = function()
+					return not UckfupDB.disabled[spellID]
+				end,
+				set = function(info, v)
+					UckfupDB.disabled[spellID] = not v
+				end      
+			}
+		end
+	end
+
+	function Uckfup:AddCustomChannels(...)
+		for k, v in pairs(announceModes) do
+			announceModes[k] = nil
+		end
+		for k, v in pairs(stockAnnounceModes) do
+			announceModes[k] = v
+		end
+		
+		excludeChannels(EnumerateServerChannels())
+		
+		for i = 1, select("#", ...), 2 do
+			local id, name = select(i, ...)
+			if not serverChannels[name] then
+				announceModes[name] = name
+			end
+		end
+	end
+
+	Uckfup:AddCustomChannels(GetChannelList())
+	Uckfup:InitMenu()
+
+	LibStub("AceConfigRegistry-3.0"):RegisterOptionsTable("Uckfup", options)
+	AceConfigDialog:AddToBlizOptions("Uckfup", "Uckfup")
+end)
+
+if( InterfaceOptionsFrame:IsVisible() and register:GetScript("OnShow") ) then
+	register:GetScript("OnShow")(register)
+end
