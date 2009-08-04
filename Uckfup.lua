@@ -6,8 +6,7 @@ Uckfup = {}
 
 local L = UckfupLocals
 local instancePlayers = 25
-local raidUnits = {}
-local mobGUIDMap = {}
+local raidUnits, mobGUIDMap = {}, {}
 
 for i=1, MAX_RAID_MEMBERS do
 	table.insert(raidUnits, "raid" .. i)
