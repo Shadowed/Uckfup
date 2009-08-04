@@ -1,8 +1,15 @@
-## Interface: 30100
+## Interface: 30200
 ## Title: Uckfup
 ## Notes: Failure reporting mod that isn't horribly evil
-## Author: Mayen
+## Author: Shadowed
 ## SavedVariables: UckfupDB
+## LoadManagers: AddonLoader
+## X-LoadOn-Events: PLAYER_ENTERING_WORLD, ZONE_CHANGED_NEW_AREA
+## X-LoadOn-ZONE_CHANGED_NEW_AREA: if( select(2, IsInInstance()) == "raid" ) then AddonLoader:LoadAddOn("Uckfup") end
+## X-LoadOn-PLAYER_ENTERING_WORLD: if( select(2, IsInInstance()) == "raid" ) then AddonLoader:LoadAddOn("Uckfup") end
+## X-LoadOn-InterfaceOptions: Uckfup
+## X-LoadOn-Slash: /uckfup, /fail, /failbot
+## OptionalDeps: Ace3
 
 localization.enUS.lua
 
