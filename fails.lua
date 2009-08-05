@@ -62,7 +62,9 @@ UckfupSpells = {
 	[61878] = {boss = L["Iron Council"], event = "SPELL_DAMAGE", mob = 32857},
 	-- Rune of Death
 	[63490] = {boss = L["Iron Council"], event = "SPELL_DAMAGE", hits = 5},
-	
+	-- 7/29 18:26:42.121 SPELL_DAMAGE,0x0000000000000000,nil,0x80000000,0x0500000002A13CA4,"Taec",0x512,61889,"Meltdown",0x8,28478,9841,8,0,0,0,nil,nil,nil
+	[61889] = {boss = L["Iron Council"], noSpam = true, event = "SPELL_DAMAGE"},
+		
 	-- Ulduar: Kologarn
 	-- Focused Eyebeam / 5/20 18:57:00.527 SPELL_DAMAGE,0x0000000000000000,nil,0x80000000,0x05000000009E0446,"Tsurara",0x514,63976,"Focused Eyebeam",0x40,3014,0,64,346,0,0,nil,nil,nil
 	[63976] = {boss = L["Kologarn"], event = "SPELL_DAMAGE", throttle = 5},
