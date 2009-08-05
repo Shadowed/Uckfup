@@ -374,7 +374,7 @@ function Uckfup:ZONE_CHANGED_NEW_AREA()
 		self.frame:RegisterEvent("UNIT_AURA")
 		
 		-- How many players can be inside, this is what will check our stop reporting totals at.
-		if( GetInstanceDifficulty() == 2 ) then
+		if( GetRaidDifficulty() == 2 or GetRaidDifficulty() == 4 ) then
 			instancePlayers = 25
 		else
 			instancePlayers = 10
