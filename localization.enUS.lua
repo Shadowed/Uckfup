@@ -1,4 +1,9 @@
 UckfupLocals = {
+	["Lord Jaraxxus"] = "Lord Jaraxxus",
+	["Val'kyr Twins"] = "Val'kyr Twins",
+	["Icehowl"] = "Icehowl",
+	["Two Jormungars"] = "Two Jormungars",
+	["Gormok the Impaler"] = "Gormok the Impaler",
 	["%d spells disabled: %s"] = "%d spells disabled: %s",
 	["%d spells enabled: %s"] = "%d spells enabled: %s",
 	["%s failed at %s"] = "%s failed at %s",
