@@ -22,6 +22,8 @@
 		hits = 3,
 		-- How much damage/energize/etc needs to have happened before it counts as a fail
 		threshold = 1000,
+		-- When used with threshold, this will set that threshold damage needs to happen within thresholdTime seconds
+		thresholdTime = 5,
 		-- How many seconds to throttle charges by, so 0.50 means that it will only add a new charge every 0.50 seconds
 		hitThrottle = 0.50,
 		-- This is an independant time that the charges will expire at in seconds, so 3 means after 3 seconds of no data, they reset.
@@ -35,6 +37,30 @@
 
 local L = UckfupLocals
 UckfupSpells = {
+	-- Trial of the Crusader: Northrend Beasts
+	-- Staggering Stomp
+	[67649] = {boss = L["Gormok the Impaler"], event = "SPELL_INTERRUPT"},
+	-- Fire Bomb
+	[66313] = {boss = L["Gormok the Impaler"], event = "SPELL_DAMAGE", hits = 3, throttle = 5},
+	-- Sime Pool
+	[67640] = {boss = L["Two Jormungars"], event = "SPELL_DAMAGE", hits = 3, throttle = 5},
+	-- Trample
+	[66734] = {boss = L["Icehowl"], event = "SPELL_DAMAGE", throttle = 3},
+	
+	-- Trial of the Crusader: Val'kyr Twins
+	-- Dark Vortex
+	[67157] = {boss = L["Val'kyr Twins"], event = "SPELL_DAMAGE", threshold = 10000, thresholdTime = 5, throttle = 5},
+	-- Light Vortex
+	[67205] = {boss = L["Val'kyr Twins"], event = "SPELL_DAMAGE", threshold = 10000, thresholdTime = 5, throttle = 5},
+	-- Unleashed Light
+	[67240] = {boss = L["Val'kyr Twins"], event = "SPELL_DAMAGE", threshold = 10000, thresholdTime = 5, throttle = 5},
+	-- Unleashed Darkness
+	[67174] = {boss = L["Val'kyr Twins"], event = "SPELL_DAMAGE", threshold = 10000, thresholdTime = 5, throttle = 5},
+	-- Touch of Darkness
+	[67283] = {boss = L["Val'kyr Twins"], event = "SPELL_PERIODIC_DAMAGE", threshold = 15000, thresholdTime = 6, throttle = 5},
+	-- Touch of Light
+	[67298] = {boss = L["Val'kyr Twins"], event = "SPELL_PERIODIC_DAMAGE", threshold = 15000, thresholdTime = 6, throttle = 5},
+	
 	-- Ulduar: Flame Leviathan
 	-- Hodir's Fury
 	[62297] = {type = "AURA", boss = L["Flame Leviathan"], throttle = 10},
@@ -96,7 +122,7 @@ UckfupSpells = {
 	[62659] = {boss = L["Freya"], noSpam = true, event = "SPELL_DISPEL"},
 	-- Ground Tremor / 5/21 17:43:09.505 SPELL_INTERRUPT,0xF1300080920040F6,"Elder Stonebark",0x20a48,0x05000000000501EB,"Monthor",0x514,62932,"Ground Tremor",0x1,48465,"S
 	[62932] = {boss = L["Freya"], event = "SPELL_INTERRUPT"},
-	
+		
 	-- Ulduar: Mimiron
 	-- Rocket Strike / 3/13 20:56:28.111  SPELL_DAMAGE,0xF1300084FF001E10,"Rocket Strike",0xa48,0x01000000007C088D,"Veev",0x511,63041,"Rocket Strike",0x4,676800,657890,4,200000,0,0,nil,nil,nil
 	[63041] = {boss = L["Mimiron"], event = "SPELL_DAMAGE"},
