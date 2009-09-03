@@ -70,6 +70,7 @@ function Uckfup:ADDON_LOADED(event, addon)
 	self.sendTimeouts = {}
 	self.sendQueue = {}
 	self.attackFails = {}
+	self.damage = {}
 	
 	self.frame:UnregisterEvent("ADDON_LOADED")
 	self.frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
@@ -237,23 +238,42 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 		
 	-- Periodic ticks
 	elseif( eventType == "SPELL_PERIODIC_DAMAGE" and bit.band(destFlags, COMBATLOG_OBJECT_TYPE_PLAYER) > 0 ) then
-		local spellID, spellName, spellSchool, auraType = ...
+		local spellID, spellName, spellSchool, amount = ...
 		local spellData = self.spells[spellName]
 		if( spellData and not spellData.disabled and spellData.event == eventType ) then
 			local id = spellName .. destGUID
 			local time = GetTime()
+			local throttle = spellData.throttle or 30
+
 			-- Check for data expiration
-			if( self.lastEvents[id] and self.lastEvents[id] <= time ) then
-				self.lastEvents[id] = nil
-				self.ticks[id] = nil
+			if( self.lastEvents[id] ) then
+				local sinceLast = time - self.lastEvents[id]
+				if( sinceLast >= throttle ) then
+					self.ticks[id] = nil
+				end
+				
+				if( spellData.thresholdTime and sinceLast >= spellData.thresholdTime ) then
+					self.damage[id] = nil
+				end
+				
+				if( not self.ticks[id] and not self.damage[id] ) then
+					self.lastEvents[id] = nil
+				end
+			end
+			
+			-- Add in failing after X damage over threshold period
+			if( spellData.thresholdTime ) then
+				self.damage[id] = (self.damage[id] or 0) + amount
+			elseif( spellData.threshold ) then
+				self.damage[id] = amount
 			end
 			
 			-- Want data to experience eventually, so defaulting to 30 seconds
-			self.lastEvents[id] = time + (spellData.throttle or 30)
+			self.lastEvents[id] = time + throttle
 			self.ticks[id] = (self.ticks[id] or 0) + 1
 
 			-- Either we aren't throttling by ticks, or we exceeded the limit before data expired
-			if( not spellData.ticks or self.ticks[id] >= spellData.ticks ) then
+			if( ( not spellData.ticks or self.ticks[id] >= spellData.ticks ) and ( not spellData.threshold or self.damage[id] >= spellData.threshold )  ) then
 				self:TriggerFail(id, spellData.throttle, destGUID, destName, spellName, spellData.noSpam)
 			end
 		end
@@ -301,21 +321,38 @@ function Uckfup:COMBAT_LOG_EVENT_UNFILTERED(event, timestamp, eventType, sourceG
 								
 				local id = spellName .. guid
 				local time = GetTime()
+				local throttle = spellData.hitExpires or spellData.throttle or 30
 				
 				-- Check for data expiration
-				if( self.lastEvents[id] and self.lastEvents[id] <= time ) then
-					self.lastEvents[id] = nil
-					self.ticks[id] = nil
+				if( self.lastEvents[id] ) then
+					local sinceLast = time - self.lastEvents[id]
+					if( sinceLast >= throttle ) then
+						self.ticks[id] = nil
+					end
+					
+					if( spellData.thresholdTime and sinceLast >= spellData.thresholdTime ) then
+						self.damage[id] = nil
+					end
+					
+					if( not self.ticks[id] and not self.damage[id] ) then
+						self.lastEvents[id] = nil
+					end
 				end
-				
+
 				-- If it's a damaging event, add up the misc thing that changes our total number
 				if( eventType == "SPELL_DAMAGE" ) then
 					local overkill, _, resisted, _, blocked, absorbed = select(5, ...)
 					amount = amount + (overkill or 0) + (resisted or 0) + (blocked or 0) + (absorbed or 0)
 				end
+
+				if( spellData.thresholdTime ) then
+					self.damage[id] = (self.damage[id] or 0) + amount
+				else
+					self.damage[id] = amount
+				end
 				
 				-- Either no threshold on damage/regen, or we exceeded the amount
-				if( not spellData.threshold or spellData.threshold <= amount ) then
+				if( not spellData.threshold or spellData.threshold <= self.damage[id] ) then
 					-- Throttle how quickly charges count up
 					if( spellData.hitThrottle ) then
 						if( self.lastTick[id] and self.lastTick[id] > time ) then
