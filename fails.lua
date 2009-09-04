@@ -53,13 +53,13 @@ UckfupSpells = {
 	-- Light Vortex
 	[67205] = {boss = L["Val'kyr Twins"], event = "SPELL_DAMAGE", threshold = 10000, thresholdTime = 5, throttle = 5},
 	-- Unleashed Light
-	[67240] = {boss = L["Val'kyr Twins"], event = "SPELL_DAMAGE", threshold = 10000, thresholdTime = 5, throttle = 5},
+	[67240] = {boss = L["Val'kyr Twins"], event = "SPELL_DAMAGE", threshold = 15000, thresholdTime = 5, throttle = 5},
 	-- Unleashed Darkness
-	[67174] = {boss = L["Val'kyr Twins"], event = "SPELL_DAMAGE", threshold = 10000, thresholdTime = 5, throttle = 5},
+	[67174] = {boss = L["Val'kyr Twins"], event = "SPELL_DAMAGE", threshold = 15000, thresholdTime = 5, throttle = 5},
 	-- Touch of Darkness
-	[67283] = {boss = L["Val'kyr Twins"], event = "SPELL_PERIODIC_DAMAGE", threshold = 15000, thresholdTime = 6, throttle = 5},
+	[67283] = {boss = L["Val'kyr Twins"], event = "SPELL_PERIODIC_DAMAGE", threshold = 20000, thresholdTime = 8, throttle = 5},
 	-- Touch of Light
-	[67298] = {boss = L["Val'kyr Twins"], event = "SPELL_PERIODIC_DAMAGE", threshold = 15000, thresholdTime = 6, throttle = 5},
+	[67298] = {boss = L["Val'kyr Twins"], event = "SPELL_PERIODIC_DAMAGE", threshold = 20000, thresholdTime = 8, throttle = 5},
 	
 	-- Ulduar: Flame Leviathan
 	-- Hodir's Fury
